@@ -3,8 +3,20 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 
+const renderPort = Number(process.env.PORT) || 5173;
+
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    host: "0.0.0.0",
+    port: renderPort,
+    strictPort: true,
+  },
+  preview: {
+    host: "0.0.0.0",
+    port: renderPort,
+    strictPort: true,
+  },
   plugins: [
     react(),
     tailwindcss(),
