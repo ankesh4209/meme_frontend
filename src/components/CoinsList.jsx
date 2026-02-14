@@ -1,0 +1,166 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
+import api from "../api/axios";
+import Header from "./Header";
+import LeftSidebar from "./LeftSidebar";
+
+const MemeCoinsList = () => {
+  const navigate = useNavigate();
+
+  const [memeCoins, setMemeCoins] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const symbols = [
+    "DOGE",
+    "SHIB",
+    "PEPE",
+    "WIF",
+    "FLOKI",
+    "BONK",
+    "BRETT",
+    "POPCAT",
+    "MOG",
+    "BOME",
+  ];
+
+  const getLocalIcon = (symbol) => {
+    try {
+      return new URL(
+        `../assets/coins/${symbol.toLowerCase()}.png`,
+        import.meta.url
+      ).href;
+    } catch {
+      return "https://via.placeholder.com/32";
+    }
+  };
+
+  const fetchLivePrices = async () => {
+    try {
+      const response = await api.post("/prices/live/batch", { symbols });
+
+      const dataWithIcons = response.data.map((coin) => ({
+        ...coin,
+        localIcon: getLocalIcon(coin.symbol),
+      }));
+
+      setMemeCoins(dataWithIcons);
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLivePrices();
+    const interval = setInterval(fetchLivePrices, 5001);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="min-h-screen w-full bg-[#121418] text-[#eaeaeb] font-sans flex flex-col">
+      <Header link onRefresh={fetchLivePrices} />
+
+      <div className="flex flex-1 mb-6">
+        <LeftSidebar />
+
+        <div className="flex-1 flex flex-col">
+          <div className="grid grid-cols-12 px-4 py-3 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase border-b border-[#23262b] bg-[#121418] flex-shrink-0 z-10">
+            <div className="col-span-6 sm:col-span-5">Coin Name</div>
+            <div className="col-span-3 text-right">Price</div>
+            <div className="col-span-3 sm:col-span-2 text-right">24h %</div>
+            <div className="hidden sm:block sm:col-span-2 text-right">
+              Action
+            </div>
+          </div>
+
+          <main className="flex-1">
+            {loading && memeCoins.length === 0 ? (
+              <div className="p-10 text-center text-gray-500">
+                Loading Market Data...
+              </div>
+            ) : (
+              <div className="divide-y divide-[#23262b]">
+                {memeCoins.map((coin) => (
+                  <div
+                    key={coin.symbol}
+                    onClick={() => navigate("/dashboard")}
+                    className="grid grid-cols-12 px-4 py-5 items-center hover:bg-[#1e2329] transition-all active:bg-[#1e2329] active:scale-[0.99] cursor-pointer"
+                  >
+                    <div className="col-span-6 sm:col-span-5 flex items-center gap-3">
+                      <img
+                        src={coin.localIcon}
+                        alt={coin.symbol}
+                        className="w-8 h-8 rounded-full bg-[#2a2e33] p-1 shadow-md object-contain"
+                        onError={(e) =>
+                          (e.target.src = "https://via.placeholder.com/32")
+                        }
+                      />
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-sm font-bold truncate">
+                          {coin.symbol}
+                        </span>
+                        <span className="text-[11px] text-gray-500 truncate">
+                          {coin.name}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="col-span-3 text-right">
+                      <div className="text-sm font-semibold tracking-tight">
+                        {coin.price}
+                      </div>
+                      <div className="text-[10px] text-gray-500 hidden sm:block">
+                        ${coin.price}
+                      </div>
+                    </div>
+
+                    <div
+                      className={`col-span-3 sm:col-span-2 text-right text-xs font-bold ${coin.up ? "text-[#02c076]" : "text-[#f6465d]"
+                        }`}
+                    >
+                      {coin.change}
+                      <div className="sm:hidden text-[9px] text-yellow-500 mt-1 font-medium">
+                        Trade →
+                      </div>
+                    </div>
+
+                    <div className="hidden sm:block sm:col-span-2 text-right">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate("/dashboard");
+                        }}
+                        className="text-[#f0b90b] border border-[#f0b90b]/20 px-3 py-1 rounded text-[12px] font-bold cursor-pointer hover:bg-[#f0b90b] hover:text-black transition-all"
+                      >
+                        Trade
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </main>
+        </div>
+      </div>
+
+      <footer className="sm:hidden h-14 bg-[#1e2329] border-t border-gray-800 flex items-center justify-around flex-shrink-0">
+        <div className="text-yellow-500 text-[10px] flex flex-col items-center">
+          <span>🏠</span>
+          Home
+        </div>
+        <div className="text-gray-500 text-[10px] flex flex-col items-center">
+          <span>📈</span>
+          Markets
+        </div>
+        <div className="text-gray-500 text-[10px] flex flex-col items-center">
+          <span>💰</span>
+          Wallet
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default MemeCoinsList;
