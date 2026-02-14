@@ -1,23 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { Suspense, lazy, useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext.jsx";
 
-// Pages
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import WalletPage from "./pages/WalletPage";
-
-// Dashboard Components
-import Header from "./components/Header";
-import LeftSidebar from "./components/LeftSidebar";
-import ChartHeader from "./components/ChartHeader";
-import TradingViewChart from "./components/TradingViewChart";
-import PositionsTable from "./components/PositionsTable";
-import Orderbook from "./components/Orderbook";
-import TradePanel from "./components/TradePanel";
-import TradeModal from "./components/TradeModal";
-import CoinsList from "./components/CoinsList";
 import config from "./config/config";
+
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const WalletPage = lazy(() => import("./pages/WalletPage"));
+const Header = lazy(() => import("./components/Header"));
+const LeftSidebar = lazy(() => import("./components/LeftSidebar"));
+const ChartHeader = lazy(() => import("./components/ChartHeader"));
+const TradingViewChart = lazy(() => import("./components/TradingViewChart"));
+const PositionsTable = lazy(() => import("./components/PositionsTable"));
+const Orderbook = lazy(() => import("./components/Orderbook"));
+const TradePanel = lazy(() => import("./components/TradePanel"));
+const TradeModal = lazy(() => import("./components/TradeModal"));
+const CoinsList = lazy(() => import("./components/CoinsList"));
 
 const App = () => {
   const [currentPrice, setCurrentPrice] = useState(67450);
@@ -89,52 +87,60 @@ const App = () => {
           }
         `}</style>
 
-        {/* Global Components (Modal) */}
-        <TradeModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          orderType={orderType}
-          inputPrice={inputPrice}
-        />
-
-        <Routes>
-          {/* Auth Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-
-          {/* Dashboard Route */}
-          <Route
-            path="/dashboard"
-            element={
-              <div className="antialiased flex flex-col h-screen">
-                <Header />
-                <div className="flex-1 flex overflow-hidden max-[1280px]:flex-col">
-                  <LeftSidebar />
-                  <div className="flex-1 flex flex-col min-w-0">
-                    <ChartHeader currentPrice={currentPrice} />
-                    <TradingViewChart />
-                    <PositionsTable />
-                  </div>
-                  <aside className="w-72 bg-[#15181C] border-l border-[#262930] flex flex-col shrink-0 max-[1280px]:w-full">
-                    <Orderbook currentPrice={currentPrice} />
-                    <TradePanel
-                      onOpenModal={handleOpenModal}
-                      inputPrice={inputPrice}
-                      setInputPrice={setInputPrice}
-                    />
-                  </aside>
-                </div>
-              </div>
-            }
+        <Suspense
+          fallback={
+            <div className="min-h-screen w-full bg-[#0B0E11] text-[#EAECEF] flex items-center justify-center">
+              Loading...
+            </div>
+          }
+        >
+          {/* Global Components (Modal) */}
+          <TradeModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            orderType={orderType}
+            inputPrice={inputPrice}
           />
 
-          {/* Wallet & Coins */}
-          <Route path="/wallet" element={<WalletPage />} />
-          <Route path="/coin" element={<CoinsList />} />
+          <Routes>
+            {/* Auth Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-          {/* Redirect empty path to login */}
-          <Route path="/" element={<Navigate to="/login" />} />
-        </Routes>
+            {/* Dashboard Route */}
+            <Route
+              path="/dashboard"
+              element={
+                <div className="antialiased flex flex-col h-screen">
+                  <Header />
+                  <div className="flex-1 flex overflow-hidden max-[1280px]:flex-col">
+                    <LeftSidebar />
+                    <div className="flex-1 flex flex-col min-w-0">
+                      <ChartHeader currentPrice={currentPrice} />
+                      <TradingViewChart />
+                      <PositionsTable />
+                    </div>
+                    <aside className="w-72 bg-[#15181C] border-l border-[#262930] flex flex-col shrink-0 max-[1280px]:w-full">
+                      <Orderbook currentPrice={currentPrice} />
+                      <TradePanel
+                        onOpenModal={handleOpenModal}
+                        inputPrice={inputPrice}
+                        setInputPrice={setInputPrice}
+                      />
+                    </aside>
+                  </div>
+                </div>
+              }
+            />
+
+            {/* Wallet & Coins */}
+            <Route path="/wallet" element={<WalletPage />} />
+            <Route path="/coin" element={<CoinsList />} />
+
+            {/* Redirect empty path to login */}
+            <Route path="/" element={<Navigate to="/login" />} />
+          </Routes>
+        </Suspense>
       </AuthProvider>
     </>
   );

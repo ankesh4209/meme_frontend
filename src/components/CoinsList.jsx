@@ -4,24 +4,25 @@ import { useNavigate } from "react-router-dom";
 import Header from "./Header";
 import LeftSidebar from "./LeftSidebar";
 
+const symbols = [
+  "DOGE",
+  "SHIB",
+  "PEPE",
+  "WIF",
+  "FLOKI",
+  "BONK",
+  "BRETT",
+  "POPCAT",
+  "MOG",
+  "BOME",
+];
+
+const streams = symbols
+  .map((symbol) => `${symbol.toLowerCase()}usdt@ticker`)
+  .join("/");
+
 const MemeCoinsList = () => {
   const navigate = useNavigate();
-
-  const [memeCoins, setMemeCoins] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const symbols = [
-    "DOGE",
-    "SHIB",
-    "PEPE",
-    "WIF",
-    "FLOKI",
-    "BONK",
-    "BRETT",
-    "POPCAT",
-    "MOG",
-    "BOME",
-  ];
 
   const getLocalIcon = (symbol) => {
     try {
@@ -34,21 +35,19 @@ const MemeCoinsList = () => {
     }
   };
 
-  useEffect(() => {
-    const initialCoins = symbols.map((symbol) => ({
+  const [memeCoins, setMemeCoins] = useState(() =>
+    symbols.map((symbol) => ({
       symbol,
       name: symbol,
       price: "0.000000",
       change: "0.00%",
       up: false,
       localIcon: getLocalIcon(symbol),
-    }));
-    setMemeCoins(initialCoins);
+    })),
+  );
+  const [loading, setLoading] = useState(true);
 
-    const streams = symbols
-      .map((symbol) => `${symbol.toLowerCase()}usdt@ticker`)
-      .join("/");
-
+  useEffect(() => {
     let socket;
     let reconnectTimeout;
     let isUnmounted = false;
@@ -147,6 +146,8 @@ const MemeCoinsList = () => {
                       <img
                         src={coin.localIcon}
                         alt={coin.symbol}
+                        loading="lazy"
+                        decoding="async"
                         className="w-8 h-8 rounded-full bg-[#2a2e33] p-1 shadow-md object-contain"
                         onError={(e) =>
                           (e.target.src = "https://via.placeholder.com/32")
