@@ -15,7 +15,7 @@ const WalletPage = () => {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate('/login');
+      navigate('/');
       return;
     }
 

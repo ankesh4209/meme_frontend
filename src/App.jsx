@@ -138,7 +138,7 @@ const App = () => {
             <Route path="/coin" element={<CoinsList />} />
 
             {/* Redirect empty path to login */}
-            <Route path="/" element={<Navigate to="/login" />} />
+            <Route path="/" element={<Navigate to="/" />} />
           </Routes>
         </Suspense>
       </AuthProvider>
