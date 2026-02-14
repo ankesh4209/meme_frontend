@@ -11,6 +11,7 @@ export default defineConfig({
     host: "0.0.0.0",
     port: renderPort,
     strictPort: true,
+    allowedHosts: ["meme-frontend-piou.onrender.com", ".onrender.com"],
   },
   preview: {
     host: "0.0.0.0",
