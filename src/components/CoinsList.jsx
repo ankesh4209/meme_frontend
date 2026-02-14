@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-import api from "../api/axios";
 import Header from "./Header";
 import LeftSidebar from "./LeftSidebar";
 
@@ -28,39 +27,95 @@ const MemeCoinsList = () => {
     try {
       return new URL(
         `../assets/coins/${symbol.toLowerCase()}.png`,
-        import.meta.url
+        import.meta.url,
       ).href;
     } catch {
       return "https://via.placeholder.com/32";
     }
   };
 
-  const fetchLivePrices = async () => {
-    try {
-      const response = await api.post("/prices/live/batch", { symbols });
-
-      const dataWithIcons = response.data.map((coin) => ({
-        ...coin,
-        localIcon: getLocalIcon(coin.symbol),
-      }));
-
-      setMemeCoins(dataWithIcons);
-      setLoading(false);
-    } catch (error) {
-      console.error(error);
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchLivePrices();
-    const interval = setInterval(fetchLivePrices, 5001);
-    return () => clearInterval(interval);
+    const initialCoins = symbols.map((symbol) => ({
+      symbol,
+      name: symbol,
+      price: "0.000000",
+      change: "0.00%",
+      up: false,
+      localIcon: getLocalIcon(symbol),
+    }));
+    setMemeCoins(initialCoins);
+
+    const streams = symbols
+      .map((symbol) => `${symbol.toLowerCase()}usdt@ticker`)
+      .join("/");
+
+    let socket;
+    let reconnectTimeout;
+    let isUnmounted = false;
+
+    const connect = () => {
+      socket = new WebSocket(
+        `wss://stream.binance.com:9443/stream?streams=${streams}`,
+      );
+
+      socket.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          const ticker = payload?.data;
+          if (!ticker?.s || !ticker?.c || typeof ticker.P === "undefined") {
+            return;
+          }
+
+          const symbol = ticker.s.replace("USDT", "");
+          const priceValue = Number.parseFloat(ticker.c);
+          const changePercent = Number.parseFloat(ticker.P);
+
+          setMemeCoins((prevCoins) =>
+            prevCoins.map((coin) => {
+              if (coin.symbol !== symbol) return coin;
+              return {
+                ...coin,
+                price: Number.isNaN(priceValue)
+                  ? coin.price
+                  : priceValue.toLocaleString(undefined, {
+                      minimumFractionDigits: 6,
+                      maximumFractionDigits: 6,
+                    }),
+                change: Number.isNaN(changePercent)
+                  ? coin.change
+                  : `${changePercent.toFixed(2)}%`,
+                up: !Number.isNaN(changePercent) && changePercent >= 0,
+              };
+            }),
+          );
+
+          setLoading(false);
+        } catch (error) {
+          console.error("Ticker parse error:", error);
+        }
+      };
+
+      socket.onclose = () => {
+        if (!isUnmounted) {
+          reconnectTimeout = setTimeout(connect, 2000);
+        }
+      };
+    };
+
+    connect();
+
+    return () => {
+      isUnmounted = true;
+      clearTimeout(reconnectTimeout);
+      if (socket && socket.readyState <= 1) {
+        socket.close();
+      }
+    };
   }, []);
 
   return (
     <div className="min-h-screen w-full bg-[#121418] text-[#eaeaeb] font-sans flex flex-col">
-      <Header link onRefresh={fetchLivePrices} />
+      <Header />
 
       <div className="flex flex-1 mb-6">
         <LeftSidebar />
@@ -117,8 +172,9 @@ const MemeCoinsList = () => {
                     </div>
 
                     <div
-                      className={`col-span-3 sm:col-span-2 text-right text-xs font-bold ${coin.up ? "text-[#02c076]" : "text-[#f6465d]"
-                        }`}
+                      className={`col-span-3 sm:col-span-2 text-right text-xs font-bold ${
+                        coin.up ? "text-[#02c076]" : "text-[#f6465d]"
+                      }`}
                     >
                       {coin.change}
                       <div className="sm:hidden text-[9px] text-yellow-500 mt-1 font-medium">

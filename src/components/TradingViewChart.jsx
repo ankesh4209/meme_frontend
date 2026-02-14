@@ -1,15 +1,18 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from "react";
 
 const TradingViewChart = () => {
   const containerRef = useRef(null);
   const scriptLoadedRef = useRef(false);
+  const allowTradingViewInDev = import.meta.env.VITE_ENABLE_TV_DEV === "true";
+  const shouldLoadWidget = import.meta.env.PROD || allowTradingViewInDev;
 
   useEffect(() => {
+    if (!shouldLoadWidget) return;
     if (scriptLoadedRef.current) return;
 
     const loadScript = () => {
-      const script = document.createElement('script');
-      script.src = 'https://s3.tradingview.com/tv.js';
+      const script = document.createElement("script");
+      script.src = "https://s3.tradingview.com/tv.js";
       script.async = true;
       script.onload = () => {
         setTimeout(() => {
@@ -28,28 +31,45 @@ const TradingViewChart = () => {
               backgroundColor: "#0B0E11",
               gridColor: "rgba(38, 41, 48, 0.3)",
               // Mobile optimization: Top toolbar ko mobile par hide ya simplify kar sakte hain
-              hide_top_toolbar: window.innerWidth < 768, 
+              hide_top_toolbar: window.innerWidth < 768,
               hide_side_toolbar: window.innerWidth < 1024,
               save_image: false,
-              container_id: "tradingview_chart"
+              container_id: "tradingview_chart",
             });
           }
         }, 100);
+      };
+      script.onerror = () => {
+        console.error("TradingView script failed to load.");
       };
       document.head.appendChild(script);
     };
 
     loadScript();
-  }, []);
+  }, [shouldLoadWidget]);
+
+  if (!shouldLoadWidget) {
+    return (
+      <div className="w-full h-[350px] md:h-full md:flex-1 bg-[#0B0E11] border-b border-[#262930] overflow-hidden flex items-center justify-center">
+        <div className="text-center px-4">
+          <p className="text-[#EAECEF] text-sm font-semibold">
+            Live chart disabled in local dev
+          </p>
+          <p className="text-slate-400 text-xs mt-1">
+            Real-time prices are still running via Binance WebSocket/API.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-
     <div className="w-full h-[350px] md:h-full md:flex-1 bg-[#0B0E11] border-b border-[#262930] overflow-hidden">
       <div className="tradingview-widget-container h-full w-full">
-        <div 
-          id="tradingview_chart" 
-          ref={containerRef} 
-          style={{ height: '100%', width: '100%' }}
+        <div
+          id="tradingview_chart"
+          ref={containerRef}
+          style={{ height: "100%", width: "100%" }}
         ></div>
       </div>
     </div>
