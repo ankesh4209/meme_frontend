@@ -23,14 +23,9 @@ const Login = () => {
         setLoading(false);
         return;
       }
-
       await login(email, password);
-
       setLoading(false);
       navigate("/coin");
-
-      // Event to refresh header if needed (context already handles state)
-      // window.dispatchEvent(new Event("storage"));
     } catch (err) {
       console.error("Login error:", err);
       setError(err.message || "Login failed");

@@ -120,10 +120,10 @@ const PositionsTable = () => {
 
               {/* Actions */}
               <div className="flex gap-2 pt-2">
-                <button className="flex-1 bg-[#262930] py-2.5 rounded-lg text-[11px] font-bold text-white">
+                <button className="flex-1 bg-[#262930] py-3 sm:py-2.5 rounded-lg text-sm sm:text-[11px] font-bold text-white">
                   Close
                 </button>
-                <button className="flex-1 bg-[#262930] py-2.5 rounded-lg text-[11px] font-bold text-white">
+                <button className="flex-1 bg-[#262930] py-3 sm:py-2.5 rounded-lg text-sm sm:text-[11px] font-bold text-white">
                   TP / SL
                 </button>
               </div>

@@ -8,22 +8,26 @@ const WalletPage = () => {
   const [wallet, setWallet] = useState({
     usdBalance: 0,
     realUsdBalance: 0,
-    demoUsdBalance: 1000,
     tokenBalance: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [depositAmount, setDepositAmount] = useState(1000);
+  const [depositAmount, setDepositAmount] = useState();
   const [depositLoading, setDepositLoading] = useState(false);
   const [depositMessage, setDepositMessage] = useState("");
-  const [accountType, setAccountType] = useState("demo");
   const [cardHolder, setCardHolder] = useState("");
   const [cardNumber, setCardNumber] = useState("");
   const [expiry, setExpiry] = useState("");
   const [cvv, setCvv] = useState("");
   const [gateway, setGateway] = useState(
-    import.meta.env.VITE_DEFAULT_PAYMENT_GATEWAY || "mock",
+    import.meta.env.VITE_DEFAULT_PAYMENT_GATEWAY || "stripe",
   );
+
+  useEffect(() => {
+    if (gateway !== "stripe" && gateway !== "razorpay") {
+      setGateway("stripe");
+    }
+  }, [gateway]);
 
   /* const fetchWalletData = async () => { ... } */ // Moved to useEffect with auth check
 
@@ -40,18 +44,6 @@ const WalletPage = () => {
     }
   }, [user, authLoading, navigate]);
 
-  useEffect(() => {
-    localStorage.setItem("tradeAccountType", accountType);
-
-    if (accountType === "demo") {
-      setCardHolder("");
-      setCardNumber("");
-      setExpiry("");
-      setCvv("");
-      setDepositMessage("");
-    }
-  }, [accountType]);
-
   const fetchWalletData = async () => {
     try {
       setLoading(true);
@@ -67,11 +59,10 @@ const WalletPage = () => {
 
       if (res.data?.success) {
         setWallet({
-          usdBalance: Number(res.data.wallet?.usdBalance || 1000),
+          usdBalance: Number(res.data.wallet?.usdBalance || 0),
           realUsdBalance: Number(
             res.data.wallet?.realUsdBalance ?? res.data.wallet?.usdBalance ?? 0,
           ),
-          demoUsdBalance: Number(res.data.wallet?.demoUsdBalance ?? 1000),
           tokenBalance: Number(res.data.wallet?.tokenBalance || 0),
         });
         setError(null);
@@ -110,66 +101,50 @@ const WalletPage = () => {
       return;
     }
 
-    if (accountType === "real") {
-      if (!cardHolder.trim() || cardHolder.trim().length < 3) {
-        setDepositMessage("Enter a valid card holder name.");
-        return;
-      }
+    if (!cardHolder.trim() || cardHolder.trim().length < 3) {
+      setDepositMessage("Enter a valid card holder name.");
+      return;
+    }
 
-      if (!/^\d{13,19}$/.test(cardNumber.replace(/\s/g, ""))) {
-        setDepositMessage("Enter a valid card number.");
-        return;
-      }
+    if (!/^\d{13,19}$/.test(cardNumber.replace(/\s/g, ""))) {
+      setDepositMessage("Enter a valid card number.");
+      return;
+    }
 
-      if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) {
-        setDepositMessage("Expiry must be in MM/YY format.");
-        return;
-      }
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) {
+      setDepositMessage("Expiry must be in MM/YY format.");
+      return;
+    }
 
-      if (!/^\d{3,4}$/.test(cvv)) {
-        setDepositMessage("Enter a valid CVV.");
-        return;
-      }
+    if (!/^\d{3,4}$/.test(cvv)) {
+      setDepositMessage("Enter a valid CVV.");
+      return;
     }
 
     try {
       setDepositLoading(true);
       setDepositMessage("");
 
-      const request =
-        accountType === "real"
-          ? api.post("/auth/deposit-card", {
-              amount,
-              accountType,
-              gateway,
-              cardHolder: cardHolder.trim(),
-              cardNumber: cardNumber.replace(/\s/g, ""),
-              expiry,
-              cvv,
-            })
-          : api.patch("/auth/balance", {
-              amount,
-              accountType: "demo",
-            });
-
-      const res = await request;
+      const res = await api.post("/auth/deposit-card", {
+        amount,
+        gateway,
+        cardHolder: cardHolder.trim(),
+        cardNumber: cardNumber.replace(/\s/g, ""),
+        expiry,
+        cvv,
+      });
 
       if (res.data?.success) {
         const nextWallet = {
-          usdBalance: Number(res.data.wallet?.usdBalance || 1000),
+          usdBalance: Number(res.data.wallet?.usdBalance || 0),
           realUsdBalance: Number(
-            res.data.wallet?.realUsdBalance ??
-              res.data.wallet?.usdBalance ??
-              1000,
+            res.data.wallet?.realUsdBalance ?? res.data.wallet?.usdBalance ?? 0,
           ),
-          demoUsdBalance: Number(res.data.wallet?.demoUsdBalance ?? 1000),
           tokenBalance: Number(res.data.wallet?.tokenBalance || 0),
         };
 
         setWallet(nextWallet);
-        setDepositMessage(
-          `$${amount.toFixed(2)} added to ${accountType} account.`,
-        );
+        setDepositMessage(`$${amount.toFixed(2)} added to your account.`);
 
         const storedUserRaw = localStorage.getItem("user");
         if (storedUserRaw) {
@@ -198,8 +173,7 @@ const WalletPage = () => {
     );
   }
 
-  const activeUsdBalance =
-    accountType === "demo" ? wallet.demoUsdBalance : wallet.realUsdBalance;
+  const activeUsdBalance = wallet.realUsdBalance;
   const portfolioValue = activeUsdBalance + wallet.tokenBalance * 0.05;
 
   return (
@@ -239,130 +213,82 @@ const WalletPage = () => {
               minimumFractionDigits: 2,
             })}
           </h1>
-          <div className="mt-4 inline-flex rounded-lg border border-white/10 overflow-hidden">
-            <button
-              onClick={() => setAccountType("real")}
-              className={`px-4 py-2 text-sm ${accountType === "real" ? "bg-emerald-500 text-black font-semibold" : "bg-transparent text-slate-300"}`}
-            >
-              Real
-            </button>
-            <button
-              onClick={() => setAccountType("demo")}
-              className={`px-4 py-2 text-sm ${accountType === "demo" ? "bg-emerald-500 text-black font-semibold" : "bg-transparent text-slate-300"}`}
-            >
-              Demo
-            </button>
-          </div>
-          <p className="mt-2 text-xs text-slate-400">
-            {accountType === "demo"
-              ? "Demo mode is for testing only. You start with $1000."
-              : "Real mode requires card payment and gateway processing."}
-          </p>
           <div className="mt-6 flex flex-col sm:flex-row gap-3">
-            {accountType === "real" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
-                <select
-                  value={gateway}
-                  onChange={(e) => setGateway(e.target.value)}
-                  className="px-4 py-3 rounded-lg bg-[#0b0e11] border border-white/10 text-white text-sm"
-                >
-                  <option value="mock">Demo Gateway (Mock)</option>
-                  <option value="stripe">Stripe</option>
-                  <option value="razorpay">Razorpay</option>
-                </select>
-                <div></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+              <select
+                value={gateway}
+                onChange={(e) => setGateway(e.target.value)}
+                className="px-4 py-3 rounded-lg bg-[#0b0e11] border border-white/10 text-white text-sm"
+              >
+                <option value="stripe">Stripe</option>
+                <option value="razorpay">Razorpay</option>
+              </select>
+              <div></div>
 
-                <input
-                  type="text"
-                  value={cardHolder}
-                  onChange={(e) => setCardHolder(e.target.value)}
-                  className="px-4 py-3 rounded-lg bg-[#0b0e11] border border-white/10 text-white text-sm"
-                  placeholder="Card Holder Name"
-                  autoComplete="cc-name"
-                />
-                <input
-                  type="text"
-                  value={cardNumber}
-                  onChange={(e) =>
-                    setCardNumber(formatCardNumber(e.target.value))
-                  }
-                  className="px-4 py-3 rounded-lg bg-[#0b0e11] border border-white/10 text-white text-sm"
-                  placeholder="Card Number"
-                  autoComplete="cc-number"
-                  inputMode="numeric"
-                />
-                <input
-                  type="text"
-                  value={expiry}
-                  onChange={(e) => setExpiry(formatExpiry(e.target.value))}
-                  className="px-4 py-3 rounded-lg bg-[#0b0e11] border border-white/10 text-white text-sm"
-                  placeholder="MM/YY"
-                  autoComplete="cc-exp"
-                  inputMode="numeric"
-                />
-                <input
-                  type="password"
-                  value={cvv}
-                  onChange={(e) =>
-                    setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))
-                  }
-                  className="px-4 py-3 rounded-lg bg-[#0b0e11] border border-white/10 text-white text-sm"
-                  placeholder="CVV"
-                  autoComplete="cc-csc"
-                  inputMode="numeric"
-                />
+              <input
+                type="text"
+                value={cardHolder}
+                onChange={(e) => setCardHolder(e.target.value)}
+                className="px-4 py-3 rounded-lg bg-[#0b0e11] border border-white/10 text-white text-sm"
+                placeholder="Card Holder Name"
+                autoComplete="cc-name"
+              />
+              <input
+                type="text"
+                value={cardNumber}
+                onChange={(e) =>
+                  setCardNumber(formatCardNumber(e.target.value))
+                }
+                className="px-4 py-3 rounded-lg bg-[#0b0e11] border border-white/10 text-white text-sm"
+                placeholder="Card Number"
+                autoComplete="cc-number"
+                inputMode="numeric"
+              />
+              <input
+                type="text"
+                value={expiry}
+                onChange={(e) => setExpiry(formatExpiry(e.target.value))}
+                className="px-4 py-3 rounded-lg bg-[#0b0e11] border border-white/10 text-white text-sm"
+                placeholder="MM/YY"
+                autoComplete="cc-exp"
+                inputMode="numeric"
+              />
+              <input
+                type="password"
+                value={cvv}
+                onChange={(e) =>
+                  setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))
+                }
+                className="px-4 py-3 rounded-lg bg-[#0b0e11] border border-white/10 text-white text-sm"
+                placeholder="CVV"
+                autoComplete="cc-csc"
+                inputMode="numeric"
+              />
 
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={depositAmount}
-                  onChange={(e) => setDepositAmount(e.target.value)}
-                  className="px-4 py-3 rounded-lg bg-[#0b0e11] border border-white/10 text-white text-sm"
-                  placeholder="Amount"
-                />
-                <button
-                  onClick={() => handleCardDeposit()}
-                  disabled={depositLoading}
-                  className="px-6 py-3 rounded-lg bg-emerald-500 text-black text-sm font-semibold hover:brightness-110 disabled:opacity-60"
-                >
-                  {depositLoading ? "Processing..." : "Deposit by Card"}
-                </button>
-                <button
-                  onClick={() => handleCardDeposit(1000)}
-                  disabled={depositLoading}
-                  className="px-6 py-3 rounded-lg border border-white/10 text-sm font-medium hover:bg-white/5 disabled:opacity-60"
-                >
-                  Add $1000
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={depositAmount}
-                  onChange={(e) => setDepositAmount(e.target.value)}
-                  className="px-4 py-3 rounded-lg bg-[#0b0e11] border border-white/10 text-white text-sm"
-                  placeholder="Amount"
-                />
-                <button
-                  onClick={() => handleCardDeposit()}
-                  disabled={depositLoading}
-                  className="px-6 py-3 rounded-lg bg-emerald-500 text-black text-sm font-semibold hover:brightness-110 disabled:opacity-60"
-                >
-                  {depositLoading ? "Processing..." : "Add Demo Balance"}
-                </button>
-                <button
-                  onClick={() => handleCardDeposit(1000)}
-                  disabled={depositLoading}
-                  className="px-6 py-3 rounded-lg border border-white/10 text-sm font-medium hover:bg-white/5 disabled:opacity-60"
-                >
-                  Add $1000
-                </button>
-              </div>
-            )}
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={depositAmount}
+                onChange={(e) => setDepositAmount(e.target.value)}
+                className="px-4 py-3 rounded-lg bg-[#0b0e11] border border-white/10 text-white text-sm"
+                placeholder="Amount"
+              />
+              <button
+                onClick={() => handleCardDeposit()}
+                disabled={depositLoading}
+                className="px-6 py-3 rounded-lg bg-emerald-500 text-black text-sm font-semibold hover:brightness-110 disabled:opacity-60"
+              >
+                {depositLoading ? "Processing..." : "Deposit by Card"}
+              </button>
+              <button
+                onClick={() => handleCardDeposit()}
+                disabled={depositLoading}
+                className="px-6 py-3 rounded-lg border border-white/10 text-sm font-medium hover:bg-white/5 disabled:opacity-60"
+              >
+                Add Funds
+              </button>
+            </div>
           </div>
           {depositMessage && (
             <p className="mt-3 text-sm text-slate-300">{depositMessage}</p>
@@ -385,19 +311,6 @@ const WalletPage = () => {
               <p className="font-semibold text-white">
                 $
                 {wallet.realUsdBalance.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                })}
-              </p>
-            </div>
-
-            <div className="bg-[#11151c] border border-white/5 rounded-xl p-5 flex justify-between">
-              <div>
-                <p className="text-white font-medium">Demo Balance</p>
-                <p className="text-xs text-slate-500">Available</p>
-              </div>
-              <p className="font-semibold text-white">
-                $
-                {wallet.demoUsdBalance.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                 })}
               </p>

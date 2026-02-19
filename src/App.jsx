@@ -96,7 +96,7 @@ const App = () => {
               <span className="text-slate-400">Real Balance</span>
               <span className="text-[#0ECB81] font-semibold">
                 $
-                {Number(storedUser?.balance || 1000).toLocaleString(undefined, {
+                {Number(storedUser?.balance).toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                 })}
               </span>
@@ -192,9 +192,9 @@ const App = () => {
             <Route
               path="/dashboard"
               element={
-                <div className="antialiased flex flex-col h-screen">
+                <div className="antialiased flex flex-col min-h-dvh md:h-screen">
                   <Header />
-                  <div className="flex-1 flex overflow-auto max-[1280px]:flex-col">
+                  <div className="flex-1 flex overflow-auto max-[1280px]:flex-col pb-24 md:pb-0">
                     {renderDashboardLayout()}
                   </div>
                 </div>

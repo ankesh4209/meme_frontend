@@ -189,7 +189,7 @@ const MemeCoinsList = () => {
                           e.stopPropagation();
                           navigate("/dashboard");
                         }}
-                        className="text-[#f0b90b] border border-[#f0b90b]/20 px-3 py-1 rounded text-[12px] font-bold cursor-pointer hover:bg-[#f0b90b] hover:text-black transition-all"
+                        className="text-[#f0b90b] border border-[#f0b90b]/20 px-4 py-2 sm:px-3 sm:py-1 rounded text-sm sm:text-[12px] font-bold cursor-pointer hover:bg-[#f0b90b] hover:text-black transition-all"
                       >
                         Trade
                       </button>

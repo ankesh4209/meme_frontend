@@ -6,10 +6,6 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
   const [leverage, setLeverage] = useState(20);
   const [balance, setBalance] = useState(0);
   const [realBalance, setRealBalance] = useState(0);
-  const [demoBalance, setDemoBalance] = useState(1000);
-  const [accountType, setAccountType] = useState(
-    localStorage.getItem("tradeAccountType") || "demo",
-  );
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState(null);
@@ -31,30 +27,24 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
           const nextReal = Number(
             res.data.wallet?.realUsdBalance ?? res.data.wallet?.usdBalance ?? 0,
           );
-          const nextDemo = Number(res.data.wallet?.demoUsdBalance ?? 1000);
 
           setRealBalance(nextReal);
-          setDemoBalance(nextDemo);
-          setBalance(accountType === "demo" ? nextDemo : nextReal);
+          setBalance(nextReal);
         }
       } catch {
         const storedUser = JSON.parse(localStorage.getItem("user")) ||
           JSON.parse(localStorage.getItem("user_data")) || { balance: 0 };
         setRealBalance(Number(storedUser.balance || 0));
-        setDemoBalance(1000);
-        setBalance(
-          accountType === "demo" ? 1000 : Number(storedUser.balance || 0),
-        );
+        setBalance(Number(storedUser.balance || 0));
       }
     };
 
     syncWallet();
-  }, [accountType]);
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem("tradeAccountType", accountType);
-    setBalance(accountType === "demo" ? demoBalance : realBalance);
-  }, [accountType, demoBalance, realBalance]);
+    setBalance(realBalance);
+  }, [realBalance]);
 
   const currentPrice = inputPrice
     ? parseFloat(inputPrice.toString().replace(/,/g, ""))
@@ -81,7 +71,6 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
       try {
         const res = await api.patch("/auth/balance", {
           amount: -Number(marginRequired),
-          accountType,
         });
 
         const nextReal = Number(
@@ -89,13 +78,9 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
             res.data?.wallet?.usdBalance ??
             realBalance,
         );
-        const nextDemo = Number(
-          res.data?.wallet?.demoUsdBalance ?? demoBalance,
-        );
 
         setRealBalance(nextReal);
-        setDemoBalance(nextDemo);
-        setBalance(accountType === "demo" ? nextDemo : nextReal);
+        setBalance(nextReal);
 
         const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
         localStorage.setItem(
@@ -170,23 +155,8 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
       )}
 
       {/* TRADE INPUTS */}
-      <div className="p-4 space-y-4">
-        <div className="inline-flex rounded-lg border border-white/10 overflow-hidden">
-          <button
-            onClick={() => setAccountType("demo")}
-            className={`px-3 py-1.5 text-[10px] font-semibold ${accountType === "demo" ? "bg-[#FCD535] text-black" : "text-slate-300"}`}
-          >
-            Demo
-          </button>
-          <button
-            onClick={() => setAccountType("real")}
-            className={`px-3 py-1.5 text-[10px] font-semibold ${accountType === "real" ? "bg-[#FCD535] text-black" : "text-slate-300"}`}
-          >
-            Real
-          </button>
-        </div>
-
-        <div className="flex justify-between text-[11px]">
+      <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+        <div className="flex justify-between text-xs sm:text-[11px]">
           <span className="text-slate-500 font-bold uppercase">Available</span>
           <span className="text-white font-mono">
             ${balance.toLocaleString()}
@@ -196,10 +166,10 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
         {/* --- REAL-TIME PRICE BOX --- */}
         <div className="space-y-1">
           <div className="flex justify-between items-center">
-            <label className="text-[10px] text-slate-500 font-black uppercase">
+            <label className="text-xs sm:text-[10px] text-slate-500 font-black uppercase">
               Price ($)
             </label>
-            <span className="text-[9px] text-[#0ECB81] font-bold tracking-tighter">
+            <span className="text-xs sm:text-[9px] text-[#0ECB81] font-bold tracking-tighter">
               ● LIVE STREAMING
             </span>
           </div>
@@ -207,12 +177,12 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
             type="text"
             value={inputPrice}
             readOnly // Optional: keep readOnly so manual edits do not interrupt live updates
-            className="w-full bg-[#1E2329] p-3 rounded-xl border border-white/5 text-[#0ECB81] font-mono font-bold outline-none shadow-inner"
+            className="w-full bg-[#1E2329] p-3 sm:p-3 rounded-xl border border-white/5 text-[#0ECB81] font-mono font-bold text-sm sm:text-base outline-none shadow-inner"
           />
         </div>
 
         <div className="space-y-1">
-          <label className="text-[10px] text-slate-500 font-black uppercase">
+          <label className="text-xs sm:text-[10px] text-slate-500 font-black uppercase">
             Size (BTC)
           </label>
           <input
@@ -226,7 +196,7 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
 
         {/* Leverage Slider */}
         <div className="space-y-2 py-2">
-          <div className="flex justify-between text-[10px] font-bold">
+          <div className="flex justify-between text-xs sm:text-[10px] font-bold">
             <span className="text-slate-500 uppercase">Leverage</span>
             <span className="text-[#FCD535]">{leverage}x</span>
           </div>
@@ -236,7 +206,7 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
             max="125"
             value={leverage}
             onChange={(e) => setLeverage(e.target.value)}
-            className="w-full accent-[#FCD535] h-1.5 bg-[#2B3139] rounded-lg"
+            className="w-full accent-[#FCD535] h-1.5 sm:h-1.5 bg-[#2B3139] rounded-lg"
           />
         </div>
 
@@ -246,7 +216,7 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
             <button
               key={p}
               onClick={() => handlePercentage(p)}
-              className="bg-[#2B3139] py-2 rounded-lg text-[10px] font-bold hover:bg-[#FCD535] hover:text-black transition-all"
+              className="bg-[#2B3139] py-2 sm:py-2 rounded-lg text-xs sm:text-[10px] font-bold hover:bg-[#FCD535] hover:text-black transition-all"
             >
               {p}%
             </button>
@@ -269,18 +239,18 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
       </div>
 
       {/* Buttons */}
-      <div className="p-4 mt-auto border-t border-[#2B3139] flex gap-2 bg-[#15181C]">
+      <div className="p-3 sm:p-4 mt-auto border-t border-[#2B3139] flex gap-2 bg-[#15181C]">
         <button
           onClick={() => placeTrade("buy")}
           disabled={loading}
-          className="flex-1 bg-[#0ECB81] hover:brightness-110 py-4 rounded-xl font-black text-black text-xs uppercase active:scale-95 transition-all"
+          className="flex-1 bg-[#0ECB81] hover:brightness-110 py-3 sm:py-4 rounded-xl font-black text-black text-sm sm:text-xs uppercase active:scale-95 transition-all"
         >
           Buy / Long
         </button>
         <button
           onClick={() => placeTrade("sell")}
           disabled={loading}
-          className="flex-1 bg-[#F6465D] hover:brightness-110 py-4 rounded-xl font-black text-white text-xs uppercase active:scale-95 transition-all"
+          className="flex-1 bg-[#F6465D] hover:brightness-110 py-3 sm:py-4 rounded-xl font-black text-white text-sm sm:text-xs uppercase active:scale-95 transition-all"
         >
           Sell / Short
         </button>

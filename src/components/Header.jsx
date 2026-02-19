@@ -90,9 +90,6 @@ const Header = () => {
       alert("Insufficient Balance!");
       return;
     }
-
-    // NOTE: This logic should ideally be an API call, not just frontend state
-    // For now keeping it compatible with existing flow but it won't persist to DB without API
     const newBalance = (wallet.usdBalance - cost).toFixed(2);
     setWallet((prev) => ({ ...prev, usdBalance: parseFloat(newBalance) }));
 
@@ -136,6 +133,19 @@ const Header = () => {
       "On iPhone/iPad, open this site in Safari, tap Share, then choose 'Add to Home Screen'.",
     );
   };
+
+  const displayName = (() => {
+    const raw = user?.username || user?.name;
+    if (!raw) return "User";
+    return String(raw)
+      .trim()
+      .replace(/\s+/g, " ")
+      .split(" ")
+      .map((part) =>
+        part ? part.charAt(0).toUpperCase() + part.slice(1).toLowerCase() : "",
+      )
+      .join(" ");
+  })();
 
   return (
     <header className="h-14 bg-[#15181C] border-b border-[#262930] flex items-center justify-between px-2 sm:px-4 shrink-0 sticky top-0 z-[100]">
@@ -204,7 +214,7 @@ const Header = () => {
         {!isStandalone && canInstall && (
           <button
             onClick={handleInstallClick}
-            className="px-2.5 py-1.5 rounded-md bg-[#FCD535] text-black text-[11px] font-bold hover:brightness-95 transition-all"
+            className="px-3 sm:px-2.5 py-2 sm:py-1.5 rounded-md bg-[#FCD535] text-black text-sm sm:text-[11px] font-bold hover:brightness-95 transition-all"
           >
             Install App
           </button>
@@ -213,7 +223,7 @@ const Header = () => {
         {!isStandalone && !canInstall && showIosTip && (
           <button
             onClick={handleIosInstallHelp}
-            className="px-2.5 py-1.5 rounded-md bg-[#2B3139] text-[#EAECEF] text-[11px] font-bold hover:bg-[#363C45] transition-all"
+            className="px-3 sm:px-2.5 py-2 sm:py-1.5 rounded-md bg-[#2B3139] text-[#EAECEF] text-sm sm:text-[11px] font-bold hover:bg-[#363C45] transition-all"
           >
             Add to Home
           </button>
@@ -273,8 +283,9 @@ const Header = () => {
               <div className="p-4 bg-[#15181C] border-b border-[#262930]">
                 {/* Show 'User' fallback if name is unavailable */}
                 <p className="text-[13px] font-bold text-white truncate">
-                  {user?.username || user?.name || "User"}
+                  {displayName}
                 </p>
+
                 <p className="text-[10px] text-slate-400 truncate opacity-80">
                   {user?.email}
                 </p>
@@ -294,13 +305,13 @@ const Header = () => {
               <div className="p-3 grid grid-cols-2 gap-2 border-b border-[#262930]">
                 <button
                   onClick={() => handleQuickTrade("buy")}
-                  className="bg-[#0ECB81] hover:bg-[#0ECB81]/80 text-black text-[11px] font-bold py-2 rounded-lg transition-all uppercase"
+                  className="bg-[#0ECB81] hover:bg-[#0ECB81]/80 text-black text-sm sm:text-[11px] font-bold py-3 sm:py-2 rounded-lg transition-all uppercase"
                 >
                   Buy
                 </button>
                 <button
                   onClick={() => handleQuickTrade("sell")}
-                  className="bg-[#F6465D] hover:bg-[#F6465D]/80 text-white text-[11px] font-bold py-2 rounded-lg transition-all uppercase"
+                  className="bg-[#F6465D] hover:bg-[#F6465D]/80 text-white text-sm sm:text-[11px] font-bold py-3 sm:py-2 rounded-lg transition-all uppercase"
                 >
                   Sell
                 </button>

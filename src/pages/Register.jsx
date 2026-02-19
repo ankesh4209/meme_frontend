@@ -38,12 +38,9 @@ const Register = () => {
         setLoading(false);
         return;
       }
-
-      // Call register from AuthContext
       await register(username, email, password);
-
       setLoading(false);
-      navigate("/dashboard");
+      navigate("/coin");
     } catch (err) {
       console.error("Registration error:", err);
       setError(err.message || "Registration failed. Please try again.");
