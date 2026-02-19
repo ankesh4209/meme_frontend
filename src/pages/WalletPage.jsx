@@ -69,9 +69,7 @@ const WalletPage = () => {
         setWallet({
           usdBalance: Number(res.data.wallet?.usdBalance || 1000),
           realUsdBalance: Number(
-            res.data.wallet?.realUsdBalance ??
-              res.data.wallet?.usdBalance ??
-              0,
+            res.data.wallet?.realUsdBalance ?? res.data.wallet?.usdBalance ?? 0,
           ),
           demoUsdBalance: Number(res.data.wallet?.demoUsdBalance ?? 1000),
           tokenBalance: Number(res.data.wallet?.tokenBalance || 0),

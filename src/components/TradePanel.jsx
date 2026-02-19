@@ -29,9 +29,7 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
         const res = await api.get("/header/wallet");
         if (res.data?.success) {
           const nextReal = Number(
-            res.data.wallet?.realUsdBalance ??
-              res.data.wallet?.usdBalance ??
-              0,
+            res.data.wallet?.realUsdBalance ?? res.data.wallet?.usdBalance ?? 0,
           );
           const nextDemo = Number(res.data.wallet?.demoUsdBalance ?? 1000);
 
