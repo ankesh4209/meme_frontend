@@ -22,6 +22,7 @@ const App = () => {
   const [inputPrice, setInputPrice] = useState("67450.00");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [orderType, setOrderType] = useState("buy");
+  const [activeSection, setActiveSection] = useState("chart");
 
   useEffect(() => {
     let socket;
@@ -73,6 +74,86 @@ const App = () => {
     setIsModalOpen(true);
   };
 
+  const renderProfileSection = () => {
+    const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+
+    return (
+      <div className="flex-1 p-4 md:p-6 overflow-auto">
+        <div className="bg-[#15181C] border border-[#262930] rounded-xl p-5 max-w-2xl">
+          <h3 className="text-white text-lg font-semibold">Profile</h3>
+          <div className="mt-4 space-y-3 text-sm">
+            <div className="flex justify-between border-b border-white/5 pb-2">
+              <span className="text-slate-400">Username</span>
+              <span className="text-white">
+                {storedUser?.username || "User"}
+              </span>
+            </div>
+            <div className="flex justify-between border-b border-white/5 pb-2">
+              <span className="text-slate-400">Email</span>
+              <span className="text-white">{storedUser?.email || "-"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-400">Real Balance</span>
+              <span className="text-[#0ECB81] font-semibold">
+                $
+                {Number(storedUser?.balance || 1000).toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                })}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderDashboardLayout = () => {
+    if (activeSection === "profile") {
+      return (
+        <>
+          <LeftSidebar
+            activeItem={activeSection}
+            onItemClick={setActiveSection}
+          />
+          {renderProfileSection()}
+        </>
+      );
+    }
+
+    return (
+      <>
+        <LeftSidebar
+          activeItem={activeSection}
+          onItemClick={setActiveSection}
+        />
+
+        {(activeSection === "chart" || activeSection === "order") && (
+          <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+            {activeSection === "chart" && (
+              <ChartHeader currentPrice={currentPrice} />
+            )}
+            <TradingViewChart />
+            <PositionsTable />
+          </div>
+        )}
+
+        <aside className="w-72 bg-[#15181C] border-l border-[#262930] flex flex-col shrink-0 max-[1280px]:w-full overflow-y-auto">
+          {(activeSection === "chart" || activeSection === "order") && (
+            <Orderbook currentPrice={currentPrice} />
+          )}
+
+          {(activeSection === "chart" || activeSection === "trade") && (
+            <TradePanel
+              onOpenModal={handleOpenModal}
+              inputPrice={inputPrice}
+              setInputPrice={setInputPrice}
+            />
+          )}
+        </aside>
+      </>
+    );
+  };
+
   return (
     <>
       <AuthProvider>
@@ -113,21 +194,8 @@ const App = () => {
               element={
                 <div className="antialiased flex flex-col h-screen">
                   <Header />
-                  <div className="flex-1 flex overflow-hidden max-[1280px]:flex-col">
-                    <LeftSidebar />
-                    <div className="flex-1 flex flex-col min-w-0">
-                      <ChartHeader currentPrice={currentPrice} />
-                      <TradingViewChart />
-                      <PositionsTable />
-                    </div>
-                    <aside className="w-72 bg-[#15181C] border-l border-[#262930] flex flex-col shrink-0 max-[1280px]:w-full">
-                      <Orderbook currentPrice={currentPrice} />
-                      <TradePanel
-                        onOpenModal={handleOpenModal}
-                        inputPrice={inputPrice}
-                        setInputPrice={setInputPrice}
-                      />
-                    </aside>
+                  <div className="flex-1 flex overflow-auto max-[1280px]:flex-col">
+                    {renderDashboardLayout()}
                   </div>
                 </div>
               }

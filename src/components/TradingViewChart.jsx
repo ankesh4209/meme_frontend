@@ -30,7 +30,7 @@ const TradingViewChart = () => {
               enable_publishing: false,
               backgroundColor: "#0B0E11",
               gridColor: "rgba(38, 41, 48, 0.3)",
-              // Mobile optimization: Top toolbar ko mobile par hide ya simplify kar sakte hain
+              // Mobile optimization: hide top toolbar on small screens
               hide_top_toolbar: window.innerWidth < 768,
               hide_side_toolbar: window.innerWidth < 1024,
               save_image: false,

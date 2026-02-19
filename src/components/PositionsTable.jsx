@@ -3,7 +3,6 @@ import React from "react";
 const PositionsTable = () => {
   return (
     <div className="flex-1 bg-[#15181C] border-t border-[#262930] flex flex-col w-full overflow-hidden">
-
       {/* Tabs */}
       <div className="flex border-b border-[#262930] text-[11px] sm:text-xs font-bold bg-[#15181C] sticky top-0 z-30">
         <button className="px-3 sm:px-4 py-3 text-[#FCD535] border-b-2 border-[#FCD535] whitespace-nowrap">
@@ -19,7 +18,6 @@ const PositionsTable = () => {
 
       {/* SCROLL AREA */}
       <div className="flex-1 overflow-y-auto font-mono text-xs">
-
         {/* DESKTOP TABLE */}
         <table className="w-full text-left hidden md:table">
           <thead className="text-slate-500 sticky top-0 bg-[#15181C] z-20">
@@ -28,9 +26,7 @@ const PositionsTable = () => {
               <th className="px-4 py-3 font-medium">Size</th>
               <th className="px-4 py-3 font-medium">Entry Price</th>
               <th className="px-4 py-3 font-medium">Mark Price</th>
-              <th className="px-4 py-3 font-medium text-right">
-                PNL (ROE%)
-              </th>
+              <th className="px-4 py-3 font-medium text-right">PNL (ROE%)</th>
             </tr>
           </thead>
 
@@ -69,7 +65,6 @@ const PositionsTable = () => {
 
         {/* MOBILE CARD VIEW */}
         <div className="md:hidden px-3 py-3 space-y-4 pb-6">
-
           {[...Array(6)].map((_, i) => (
             <div
               key={i}
@@ -95,12 +90,8 @@ const PositionsTable = () => {
                 </div>
 
                 <div className="text-right">
-                  <p className="text-slate-500 text-[10px]">
-                    Unrealized PNL
-                  </p>
-                  <p className="text-[#0ECB81] font-bold text-sm">
-                    +324.75 USDT
-                  </p>
+                  <p className="text-slate-500 text-[10px]">Unrealized PNL</p>
+                  <p className="text-[#0ECB81] font-bold text-sm">+$324.75</p>
                   <p className="text-[#0ECB81] text-[10px] font-bold">
                     +19.25%
                   </p>
@@ -115,7 +106,7 @@ const PositionsTable = () => {
                 </div>
                 <div className="text-right">
                   <p className="text-slate-500 text-[10px]">Margin</p>
-                  <p className="text-white text-[12px]">1,670 USDT</p>
+                  <p className="text-white text-[12px]">$1,670</p>
                 </div>
                 <div>
                   <p className="text-slate-500 text-[10px]">Entry</p>
@@ -139,7 +130,6 @@ const PositionsTable = () => {
             </div>
           ))}
         </div>
-
       </div>
     </div>
   );

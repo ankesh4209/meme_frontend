@@ -7,6 +7,10 @@ const Header = () => {
   const navigate = useNavigate();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [canInstall, setCanInstall] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [showIosTip, setShowIosTip] = useState(false);
   // Wallet state could be moved to context too, but kept local for now or derived from user
   const [wallet, setWallet] = useState({ usdBalance: user?.balance || 0 });
 
@@ -23,7 +27,6 @@ const Header = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState(null);
 
-
   const WS_URL = "wss://stream.binance.com:9443/ws/btcusdt@trade";
   const [btcPrice, setBtcPrice] = useState("0.00");
 
@@ -35,10 +38,45 @@ const Header = () => {
         parseFloat(data.p).toLocaleString(undefined, {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
-        })
+        }),
       );
     };
     return () => btcWs.close();
+  }, []);
+
+  useEffect(() => {
+    const standaloneMode =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true;
+
+    setIsStandalone(standaloneMode);
+
+    const ua = window.navigator.userAgent.toLowerCase();
+    const isIosDevice = /iphone|ipad|ipod/.test(ua);
+    setShowIosTip(isIosDevice && !standaloneMode);
+
+    const handleBeforeInstallPrompt = (event) => {
+      event.preventDefault();
+      setDeferredPrompt(event);
+      setCanInstall(true);
+    };
+
+    const handleAppInstalled = () => {
+      setDeferredPrompt(null);
+      setCanInstall(false);
+      setIsStandalone(true);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleAppInstalled);
+
+    return () => {
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt,
+      );
+      window.removeEventListener("appinstalled", handleAppInstalled);
+    };
   }, []);
 
   const profileRef = useRef(null);
@@ -56,7 +94,7 @@ const Header = () => {
     // NOTE: This logic should ideally be an API call, not just frontend state
     // For now keeping it compatible with existing flow but it won't persist to DB without API
     const newBalance = (wallet.usdBalance - cost).toFixed(2);
-    setWallet(prev => ({ ...prev, usdBalance: parseFloat(newBalance) }));
+    setWallet((prev) => ({ ...prev, usdBalance: parseFloat(newBalance) }));
 
     setModalData({ side, price: btcPrice, margin: cost.toFixed(2) });
     setShowModal(true);
@@ -84,6 +122,21 @@ const Header = () => {
     return "?";
   };
 
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    setDeferredPrompt(null);
+    setCanInstall(false);
+  };
+
+  const handleIosInstallHelp = () => {
+    window.alert(
+      "On iPhone/iPad, open this site in Safari, tap Share, then choose 'Add to Home Screen'.",
+    );
+  };
+
   return (
     <header className="h-14 bg-[#15181C] border-b border-[#262930] flex items-center justify-between px-2 sm:px-4 shrink-0 sticky top-0 z-[100]">
       {/* TRADE SUCCESS MODAL */}
@@ -91,10 +144,11 @@ const Header = () => {
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-[#1E2329] w-full max-w-[280px] border border-[#2B3139] rounded-xl p-5 shadow-2xl">
             <div
-              className={`w-10 h-10 rounded-full mx-auto flex items-center justify-center mb-3 ${modalData.side === "buy"
-                ? "bg-[#0ECB81]/20 text-[#0ECB81]"
-                : "bg-[#F6465D]/20 text-[#F6465D]"
-                }`}
+              className={`w-10 h-10 rounded-full mx-auto flex items-center justify-center mb-3 ${
+                modalData.side === "buy"
+                  ? "bg-[#0ECB81]/20 text-[#0ECB81]"
+                  : "bg-[#F6465D]/20 text-[#F6465D]"
+              }`}
             >
               <svg
                 className="w-6 h-6"
@@ -147,6 +201,24 @@ const Header = () => {
 
       {/* Right Section */}
       <div className="flex items-center gap-1 sm:gap-3">
+        {!isStandalone && canInstall && (
+          <button
+            onClick={handleInstallClick}
+            className="px-2.5 py-1.5 rounded-md bg-[#FCD535] text-black text-[11px] font-bold hover:brightness-95 transition-all"
+          >
+            Install App
+          </button>
+        )}
+
+        {!isStandalone && !canInstall && showIosTip && (
+          <button
+            onClick={handleIosInstallHelp}
+            className="px-2.5 py-1.5 rounded-md bg-[#2B3139] text-[#EAECEF] text-[11px] font-bold hover:bg-[#363C45] transition-all"
+          >
+            Add to Home
+          </button>
+        )}
+
         <button
           onClick={() => navigate("/wallet")}
           className="p-2 text-slate-400 hover:text-[#FCD535] relative group"
@@ -199,7 +271,7 @@ const Header = () => {
           {isProfileOpen && (
             <div className="absolute top-full right-0 mt-2 w-64 bg-[#1E2228] border border-[#262930] rounded-xl shadow-2xl overflow-hidden z-50">
               <div className="p-4 bg-[#15181C] border-b border-[#262930]">
-                {/* Agar name nahi hai toh User dikhayega, Loading nahi */}
+                {/* Show 'User' fallback if name is unavailable */}
                 <p className="text-[13px] font-bold text-white truncate">
                   {user?.username || user?.name || "User"}
                 </p>

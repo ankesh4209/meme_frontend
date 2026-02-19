@@ -28,13 +28,13 @@ const Register = () => {
 
       // Client-side validation
       if (!username || !email || !password) {
-        setError("Sabhi fields bharna zaroori hai");
+        setError("All fields are required");
         setLoading(false);
         return;
       }
 
       if (password.length < 6) {
-        setError("Password kam se kam 6 aksharo ka hona chahiye");
+        setError("Password must be at least 6 characters long");
         setLoading(false);
         return;
       }
@@ -44,7 +44,6 @@ const Register = () => {
 
       setLoading(false);
       navigate("/dashboard");
-
     } catch (err) {
       console.error("Registration error:", err);
       setError(err.message || "Registration failed. Please try again.");
@@ -91,7 +90,7 @@ const Register = () => {
                 value={formData.email}
                 onChange={handleChange}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="naam@example.com"
+                placeholder="name@example.com"
               />
             </div>
 
@@ -125,19 +124,19 @@ const Register = () => {
               disabled={loading}
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400"
             >
-              {loading ? "Account ban raha hai..." : "Create Account"}
+              {loading ? "Creating account..." : "Create Account"}
             </button>
           </form>
 
           {/* Login Link */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Pehle se account hai?{" "}
+              Already have an account?{" "}
               <a
                 href="/"
                 className="font-medium text-indigo-600 hover:text-indigo-500"
               >
-                Login karein
+                Log in
               </a>
             </p>
           </div>
@@ -146,7 +145,7 @@ const Register = () => {
         {/* Benefits Cards - Simple Version */}
         <div className="mt-6 grid grid-cols-3 gap-2">
           {[
-            { label: "Bonus", val: "₹1L" },
+            { label: "Bonus", val: "$100K" },
             { label: "Fees", val: "0%" },
             { label: "Coins", val: "100+" },
           ].map((item, i) => (

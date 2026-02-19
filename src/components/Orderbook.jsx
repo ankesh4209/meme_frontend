@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import OrderbookRow from './OrderbookRow';
+import React, { useState, useEffect } from "react";
+import OrderbookRow from "./OrderbookRow";
 
 const Orderbook = ({ currentPrice }) => {
   const [asks, setAsks] = useState([]);
@@ -12,7 +12,7 @@ const Orderbook = ({ currentPrice }) => {
       let askTotal = 0;
       let bidTotal = 0;
 
-      // Mobile par 15 ki jagah 8-10 rows kaafi hoti hain screen space bachane ke liye
+      // Use fewer rows on mobile to save screen space
       const rowCount = window.innerWidth < 768 ? 10 : 15;
 
       for (let i = 0; i < rowCount; i++) {
@@ -21,7 +21,7 @@ const Orderbook = ({ currentPrice }) => {
         newAsks.unshift({
           price: currentPrice + (i + 1) * 0.5 + Math.random() * 0.4,
           size: askSize,
-          total: askTotal
+          total: askTotal,
         });
 
         const bidSize = 0.05 + Math.random() * 1.4;
@@ -29,7 +29,7 @@ const Orderbook = ({ currentPrice }) => {
         newBids.push({
           price: currentPrice - (i + 1) * 0.5 - Math.random() * 0.4,
           size: bidSize,
-          total: bidTotal
+          total: bidTotal,
         });
       }
 
@@ -53,16 +53,15 @@ const Orderbook = ({ currentPrice }) => {
 
       <div className="flex-1 overflow-hidden font-mono text-[11px] relative">
         <div className="absolute inset-0 flex flex-col">
-          
           {/* Asks (Sellers - Red) */}
           <div className="flex-1 flex flex-col-reverse overflow-hidden text-[#F6465D]">
             {asks.map((ask, i) => (
-              <OrderbookRow 
-                key={`ask-${i}`} 
-                price={ask.price} 
-                size={ask.size} 
-                total={ask.total} 
-                type="ask" 
+              <OrderbookRow
+                key={`ask-${i}`}
+                price={ask.price}
+                size={ask.size}
+                total={ask.total}
+                type="ask"
               />
             ))}
           </div>
@@ -72,20 +71,18 @@ const Orderbook = ({ currentPrice }) => {
             <span className="text-sm sm:text-base font-bold text-[#0ECB81]">
               {currentPrice.toFixed(2)}
             </span>
-            <span className="text-[10px] text-slate-500">
-              Last Price
-            </span>
+            <span className="text-[10px] text-slate-500">Last Price</span>
           </div>
 
           {/* Bids (Buyers - Green) */}
           <div className="flex-1 overflow-hidden text-[#0ECB81]">
             {bids.map((bid, i) => (
-              <OrderbookRow 
-                key={`bid-${i}`} 
-                price={bid.price} 
-                size={bid.size} 
-                total={bid.total} 
-                type="bid" 
+              <OrderbookRow
+                key={`bid-${i}`}
+                price={bid.price}
+                size={bid.size}
+                total={bid.total}
+                type="bid"
               />
             ))}
           </div>
