@@ -5,7 +5,7 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
   const [size, setSize] = useState("");
   const [leverage, setLeverage] = useState(20);
   const [balance, setBalance] = useState(0);
-  const [realBalance, setRealBalance] = useState(1000);
+  const [realBalance, setRealBalance] = useState(0);
   const [demoBalance, setDemoBalance] = useState(1000);
   const [accountType, setAccountType] = useState(
     localStorage.getItem("tradeAccountType") || "demo",
@@ -31,7 +31,7 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
           const nextReal = Number(
             res.data.wallet?.realUsdBalance ??
               res.data.wallet?.usdBalance ??
-              1000,
+              0,
           );
           const nextDemo = Number(res.data.wallet?.demoUsdBalance ?? 1000);
 
@@ -41,11 +41,11 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
         }
       } catch {
         const storedUser = JSON.parse(localStorage.getItem("user")) ||
-          JSON.parse(localStorage.getItem("user_data")) || { balance: 1000 };
-        setRealBalance(Number(storedUser.balance || 1000));
+          JSON.parse(localStorage.getItem("user_data")) || { balance: 0 };
+        setRealBalance(Number(storedUser.balance || 0));
         setDemoBalance(1000);
         setBalance(
-          accountType === "demo" ? 1000 : Number(storedUser.balance || 1000),
+          accountType === "demo" ? 1000 : Number(storedUser.balance || 0),
         );
       }
     };

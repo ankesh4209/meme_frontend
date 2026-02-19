@@ -6,8 +6,8 @@ import { useAuth } from "../context/AuthContext.jsx";
 const WalletPage = () => {
   const navigate = useNavigate();
   const [wallet, setWallet] = useState({
-    usdBalance: 1000,
-    realUsdBalance: 1000,
+    usdBalance: 0,
+    realUsdBalance: 0,
     demoUsdBalance: 1000,
     tokenBalance: 0,
   });
@@ -71,7 +71,7 @@ const WalletPage = () => {
           realUsdBalance: Number(
             res.data.wallet?.realUsdBalance ??
               res.data.wallet?.usdBalance ??
-              1000,
+              0,
           ),
           demoUsdBalance: Number(res.data.wallet?.demoUsdBalance ?? 1000),
           tokenBalance: Number(res.data.wallet?.tokenBalance || 0),
