@@ -6,6 +6,22 @@ const TradingViewChart = ({ selectedCoin }) => {
   const allowTradingViewInDev = import.meta.env.VITE_ENABLE_TV_DEV === "true";
   const shouldLoadWidget = import.meta.env.PROD || allowTradingViewInDev;
 
+  // Map supported meme coins to their correct TradingView symbols
+  const symbolMap = {
+    BTC: "BINANCE:BTCUSDT.P",
+    ETH: "BINANCE:ETHUSDT.P",
+    DOGE: "BINANCE:DOGEUSDT.P",
+    SHIB: "BINANCE:SHIBUSDT.P",
+    PEPE: "BINANCE:PEPEUSDT.P",
+    WIF: "BINANCE:WIFUSDT.P",
+    FLOKI: "BINANCE:FLOKIUSDT.P",
+    BONK: "BINANCE:BONKUSDT.P",
+    BRETT: "BINANCE:BRETTUSDT.P",
+    POPCAT: "BINANCE:POPCATUSDT.P",
+    MOG: "BINANCE:MOGUSDT.P",
+    BOME: "BINANCE:BOMEUSDT.P",
+  };
+
   useEffect(() => {
     if (!shouldLoadWidget) return;
     if (scriptLoadedRef.current) return;
@@ -18,9 +34,11 @@ const TradingViewChart = ({ selectedCoin }) => {
         setTimeout(() => {
           if (window.TradingView && containerRef.current) {
             scriptLoadedRef.current = true;
+            const tvSymbol =
+              symbolMap[selectedCoin?.symbol] || symbolMap["BTC"];
             new window.TradingView.widget({
               autosize: true,
-              symbol: `BINANCE:${selectedCoin?.symbol || "BTC"}USDT.P`,
+              symbol: tvSymbol,
               interval: "15",
               timezone: "Etc/UTC",
               theme: "dark",
@@ -30,7 +48,6 @@ const TradingViewChart = ({ selectedCoin }) => {
               enable_publishing: false,
               backgroundColor: "#0B0E11",
               gridColor: "rgba(38, 41, 48, 0.3)",
-              // Mobile optimization: hide top toolbar on small screens
               hide_top_toolbar: window.innerWidth < 768,
               hide_side_toolbar: window.innerWidth < 1024,
               save_image: false,
@@ -46,28 +63,12 @@ const TradingViewChart = ({ selectedCoin }) => {
     };
 
     loadScript();
-    // Clean up chart on coin change
     return () => {
       if (containerRef.current) {
         containerRef.current.innerHTML = "";
       }
     };
   }, [shouldLoadWidget, selectedCoin]);
-
-  if (!shouldLoadWidget) {
-    return (
-      <div className="w-full h-[350px] md:h-full md:flex-1 bg-[#0B0E11] border-b border-[#262930] overflow-hidden flex items-center justify-center">
-        <div className="text-center px-4">
-          <p className="text-[#EAECEF] text-sm font-semibold">
-            Live chart disabled in local dev
-          </p>
-          <p className="text-slate-400 text-xs mt-1">
-            Real-time prices are still running via Binance WebSocket/API.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="w-full h-[350px] md:h-full md:flex-1 bg-[#0B0E11] border-b border-[#262930] overflow-hidden">
