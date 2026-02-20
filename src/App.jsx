@@ -140,7 +140,11 @@ const App = () => {
               />
             )}
             <TradingViewChart selectedCoin={selectedCoin} />
-            <PositionsTable />
+            <PositionsTable
+              selectedCoin={selectedCoin}
+              setSelectedCoin={setSelectedCoin}
+              userId={JSON.parse(localStorage.getItem("user") || "{}")._id}
+            />
           </div>
         )}
 
