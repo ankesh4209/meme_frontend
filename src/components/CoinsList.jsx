@@ -21,7 +21,7 @@ const streams = symbols
   .map((symbol) => `${symbol.toLowerCase()}usdt@ticker`)
   .join("/");
 
-const MemeCoinsList = () => {
+const MemeCoinsList = ({ setSelectedCoin }) => {
   const navigate = useNavigate();
 
   const getLocalIcon = (symbol) => {
@@ -139,7 +139,10 @@ const MemeCoinsList = () => {
                 {memeCoins.map((coin) => (
                   <div
                     key={coin.symbol}
-                    onClick={() => navigate("/dashboard")}
+                    onClick={() => {
+                      setSelectedCoin({ symbol: coin.symbol, name: coin.name });
+                      navigate("/dashboard");
+                    }}
                     className="grid grid-cols-12 px-4 py-5 items-center hover:bg-[#1e2329] transition-all active:bg-[#1e2329] active:scale-[0.99] cursor-pointer"
                   >
                     <div className="col-span-6 sm:col-span-5 flex items-center gap-3">

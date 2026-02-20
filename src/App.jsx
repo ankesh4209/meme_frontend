@@ -23,6 +23,10 @@ const App = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [orderType, setOrderType] = useState("buy");
   const [activeSection, setActiveSection] = useState("chart");
+  const [selectedCoin, setSelectedCoin] = useState({
+    symbol: "BTC",
+    name: "Bitcoin",
+  });
 
   useEffect(() => {
     let socket;
@@ -130,9 +134,12 @@ const App = () => {
         {(activeSection === "chart" || activeSection === "order") && (
           <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
             {activeSection === "chart" && (
-              <ChartHeader currentPrice={currentPrice} />
+              <ChartHeader
+                currentPrice={currentPrice}
+                selectedCoin={selectedCoin}
+              />
             )}
-            <TradingViewChart />
+            <TradingViewChart selectedCoin={selectedCoin} />
             <PositionsTable />
           </div>
         )}
@@ -203,7 +210,10 @@ const App = () => {
 
             {/* Wallet & Coins */}
             <Route path="/wallet" element={<WalletPage />} />
-            <Route path="/coin" element={<CoinsList />} />
+            <Route
+              path="/coin"
+              element={<CoinsList setSelectedCoin={setSelectedCoin} />}
+            />
 
             {/* Redirect empty path to login */}
             <Route path="/" element={<Navigate to="/" />} />

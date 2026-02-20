@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 
-const TradingViewChart = () => {
+const TradingViewChart = ({ selectedCoin }) => {
   const containerRef = useRef(null);
   const scriptLoadedRef = useRef(false);
   const allowTradingViewInDev = import.meta.env.VITE_ENABLE_TV_DEV === "true";
@@ -20,7 +20,7 @@ const TradingViewChart = () => {
             scriptLoadedRef.current = true;
             new window.TradingView.widget({
               autosize: true,
-              symbol: "BINANCE:BTCUSDT.P",
+              symbol: `BINANCE:${selectedCoin?.symbol || "BTC"}USDT.P`,
               interval: "15",
               timezone: "Etc/UTC",
               theme: "dark",
@@ -46,7 +46,13 @@ const TradingViewChart = () => {
     };
 
     loadScript();
-  }, [shouldLoadWidget]);
+    // Clean up chart on coin change
+    return () => {
+      if (containerRef.current) {
+        containerRef.current.innerHTML = "";
+      }
+    };
+  }, [shouldLoadWidget, selectedCoin]);
 
   if (!shouldLoadWidget) {
     return (
