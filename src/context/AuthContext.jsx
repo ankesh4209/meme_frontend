@@ -18,7 +18,10 @@ export const AuthProvider = ({ children }) => {
   const checkUserLoggedIn = async () => {
     try {
       const token = localStorage.getItem("token");
-      if (!token) return;
+      if (!token) {
+        window.location.href = "/";
+        return;
+      }
       const res = await api.get("/auth/profile");
       if (res.data.success) {
         setUser(res.data.user);
@@ -29,6 +32,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       setUser(null);
+      window.location.href = "/";
     } finally {
       setLoading(false);
     }

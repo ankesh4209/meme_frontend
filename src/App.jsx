@@ -18,8 +18,8 @@ const TradeModal = lazy(() => import("./components/TradeModal"));
 const CoinsList = lazy(() => import("./components/CoinsList"));
 
 const App = () => {
-  const [currentPrice, setCurrentPrice] = useState(67450);
-  const [inputPrice, setInputPrice] = useState("67450.00");
+  const [currentPrice, setCurrentPrice] = useState(null);
+  const [inputPrice, setInputPrice] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [orderType, setOrderType] = useState("buy");
   const [activeSection, setActiveSection] = useState("chart");
@@ -33,8 +33,11 @@ const App = () => {
     let reconnectTimeout;
     let isUnmounted = false;
 
+    const wsSymbol = `${selectedCoin.symbol.toLowerCase()}usdt@trade`;
+    const wsUrl = `wss://stream.binance.com:9443/ws/${wsSymbol}`;
+
     const connect = () => {
-      socket = new WebSocket(config.WS_BINANCE_URL);
+      socket = new WebSocket(wsUrl);
 
       socket.onmessage = (event) => {
         try {
@@ -71,7 +74,7 @@ const App = () => {
         socket.close();
       }
     };
-  }, []);
+  }, [selectedCoin]);
 
   const handleOpenModal = (type) => {
     setOrderType(type);
