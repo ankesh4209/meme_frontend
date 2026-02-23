@@ -222,9 +222,6 @@ const App = () => {
               path="/coin"
               element={<CoinsList setSelectedCoin={setSelectedCoin} />}
             />
-
-            {/* Redirect empty path to login */}
-            <Route path="/" element={<Navigate to="/" />} />
           </Routes>
         </Suspense>
       </AuthProvider>
