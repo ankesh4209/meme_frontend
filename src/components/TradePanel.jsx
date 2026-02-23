@@ -2,13 +2,22 @@ import React, { useState, useEffect } from "react";
 import api from "../api/axios";
 
 const TradePanel = ({ inputPrice, setInputPrice }) => {
-  const [size, setSize] = useState("");
+    // Scheduling
+    const [scheduleMinutes, setScheduleMinutes] = useState(0);
+    const [countdown, setCountdown] = useState(null);
+  // Replace size with target price
+  const [targetPrice, setTargetPrice] = useState("");
   const [leverage, setLeverage] = useState(20);
   const [balance, setBalance] = useState(0);
   const [realBalance, setRealBalance] = useState(0);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState(null);
+  // Accept selectedCoin prop
+  const [coin, setCoin] = useState(null);
+  useEffect(() => {
+    if (selectedCoin) setCoin(selectedCoin);
+  }, [selectedCoin]);
 
   // --- REAL PRICE AUTO-UPDATE LOGIC ---
   // Whenever inputPrice (BTC live) changes via props, keep this field in sync
@@ -46,6 +55,58 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
     setBalance(realBalance);
   }, [realBalance]);
 
+  // Real-time monitoring for auto-execution
+    // Simulate price preview for scheduled orders
+    const [simulatedPrice, setSimulatedPrice] = useState(null);
+    useEffect(() => {
+      if (scheduleMinutes > 0 && targetPrice) {
+        // Simple simulation: assume price increases/decreases by random %
+        const tgt = parseFloat(targetPrice);
+        const randomChange = tgt * (1 + (Math.random() * 0.1 - 0.05)); // +/-5%
+        setSimulatedPrice(randomChange.toFixed(2));
+      } else {
+        setSimulatedPrice(null);
+      }
+    }, [scheduleMinutes, targetPrice]);
+  useEffect(() => {
+    if (!targetPrice || !coin) return;
+    let interval;
+    let timer;
+    interval = setInterval(() => {
+      const live = parseFloat(inputPrice.toString().replace(/,/g, ""));
+      const tgt = parseFloat(targetPrice);
+      if (!isNaN(live) && !isNaN(tgt)) {
+        // Buy: current price >= target price
+        // Sell: current price <= target price
+        if (modalData?.side === "buy" && live >= tgt) {
+          setModalData((prev) => ({ ...prev, status: "Executed" }));
+        } else if (modalData?.side === "sell" && live <= tgt) {
+          setModalData((prev) => ({ ...prev, status: "Executed" }));
+        }
+      }
+    }, 2000); // Check every 2 seconds
+
+    // Scheduled execution
+    if (scheduleMinutes > 0 && modalData?.status === "Pending") {
+      let seconds = scheduleMinutes * 60;
+      setCountdown(seconds);
+      timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev === 1) {
+            setModalData((prevData) => ({ ...prevData, status: "Executed (Scheduled)" }));
+            clearInterval(timer);
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      clearInterval(interval);
+      if (timer) clearInterval(timer);
+    };
+  }, [inputPrice, targetPrice, coin, modalData, scheduleMinutes]);
+
   const currentPrice = inputPrice
     ? parseFloat(inputPrice.toString().replace(/,/g, ""))
     : 0;
@@ -63,14 +124,16 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
   };
 
   const placeTrade = async (side) => {
-    if (!currentPrice || !size || size <= 0) return alert("Enter Size");
-    if (isInsufficient) return alert("Insufficient Balance!");
-
+    if (!targetPrice || isNaN(parseFloat(targetPrice))) return alert("Enter Target Price");
+    if (scheduleMinutes < 0) return alert("Schedule time must be 0 or positive");
     setLoading(true);
     setTimeout(async () => {
       try {
+        // Send selected coin info with trade
         const res = await api.patch("/auth/balance", {
-          amount: -Number(marginRequired),
+          symbol: coin?.symbol || "BTC",
+          targetPrice: parseFloat(targetPrice),
+          side,
         });
 
         const nextReal = Number(
@@ -90,12 +153,13 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
 
         setModalData({
           side,
-          price: currentPrice.toLocaleString(),
-          size,
-          margin: marginRequired,
+          price: targetPrice,
+          symbol: coin?.symbol || "BTC",
+          status: "Pending",
+          scheduleMinutes,
         });
         setShowModal(true);
-        setSize("");
+        setTargetPrice("");
       } catch (error) {
         alert(error?.error || "Trade failed. Please try again.");
       } finally {
@@ -133,7 +197,7 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
             <div className="my-4 space-y-2 bg-[#15181C] p-3 rounded-lg border border-white/5 font-mono text-[10px]">
               <div className="flex justify-between">
                 <span className="text-slate-500 font-bold uppercase">
-                  Price
+                  Price ({coin?.symbol || "BTC"}/USDT)
                 </span>
                 <span className="text-white">${modalData.price}</span>
               </div>
@@ -167,18 +231,47 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
         <div className="space-y-1">
           <div className="flex justify-between items-center">
             <label className="text-xs sm:text-[10px] text-slate-500 font-black uppercase">
-              Price ($)
+              Target Price ({coin?.symbol || "BTC"}/USDT)
             </label>
             <span className="text-xs sm:text-[9px] text-[#0ECB81] font-bold tracking-tighter">
               ● LIVE STREAMING
             </span>
           </div>
           <input
-            type="text"
-            value={inputPrice}
-            readOnly // Optional: keep readOnly so manual edits do not interrupt live updates
+            type="number"
+            value={targetPrice}
+            onChange={e => setTargetPrice(e.target.value)}
+            placeholder="Enter your target price"
             className="w-full bg-[#1E2329] p-3 sm:p-3 rounded-xl border border-white/5 text-[#0ECB81] font-mono font-bold text-sm sm:text-base outline-none shadow-inner"
           />
+          <div className="flex justify-between mt-1 text-xs">
+            <span>Current Price: {inputPrice}</span>
+            {modalData?.status && <span>Status: {modalData.status}</span>}
+          </div>
+          <div className="flex items-center gap-2 mt-2">
+            <label className="text-xs text-slate-500 font-black uppercase">Schedule (min)</label>
+            <input
+              type="number"
+              value={scheduleMinutes}
+              min={0}
+              onChange={e => setScheduleMinutes(Number(e.target.value))}
+              className="w-20 bg-[#1E2329] p-2 rounded-xl border border-white/5 text-[#FCD535] font-mono font-bold text-xs outline-none shadow-inner"
+            />
+            {countdown !== null && (
+              <>
+                <span className="text-xs text-[#FCD535]">Countdown: {countdown}s</span>
+                <div className="w-32 h-2 bg-[#23262b] rounded overflow-hidden ml-2">
+                  <div
+                    className="h-2 bg-[#FCD535] transition-all"
+                    style={{ width: `${((countdown / (scheduleMinutes * 60)) * 100) || 0}%` }}
+                  />
+                </div>
+              </>
+            )}
+            {simulatedPrice && (
+              <span className="text-xs text-[#0ECB81] ml-2">Preview: {targetPrice} → {simulatedPrice} in {scheduleMinutes} min</span>
+            )}
+          </div>
         </div>
 
         <div className="space-y-1">

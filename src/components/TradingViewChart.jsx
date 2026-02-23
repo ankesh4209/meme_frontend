@@ -71,20 +71,10 @@ const TradingViewChart = ({ selectedCoin }) => {
   }, [shouldLoadWidget, selectedCoin]);
 
   // Only render chart container if symbol is supported
-  const tvSymbol = symbolMap[selectedCoin?.symbol];
+  let tvSymbol = symbolMap[selectedCoin?.symbol];
   if (!shouldLoadWidget || !tvSymbol) {
-    return (
-      <div className="w-full h-[350px] md:h-full md:flex-1 bg-[#0B0E11] border-b border-[#262930] flex items-center justify-center">
-        <div className="text-center px-4">
-          <p className="text-[#EAECEF] text-sm font-semibold">
-            No chart available for this coin.
-          </p>
-          <p className="text-slate-400 text-xs mt-1">
-            This coin is not supported by TradingView or Binance perpetuals.
-          </p>
-        </div>
-      </div>
-    );
+    // Fallback to BTC chart if symbol not supported
+    tvSymbol = symbolMap["BTC"];
   }
   return (
     <div className="w-full h-[350px] md:h-full md:flex-1 bg-[#0B0E11] border-b border-[#262930] overflow-hidden">

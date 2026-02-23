@@ -161,6 +161,7 @@ const App = () => {
               onOpenModal={handleOpenModal}
               inputPrice={inputPrice}
               setInputPrice={setInputPrice}
+              selectedCoin={selectedCoin}
             />
           )}
         </aside>
