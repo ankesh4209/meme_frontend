@@ -129,33 +129,25 @@ const TradePanel = ({ inputPrice, setInputPrice, selectedCoin }) => {
 
   const placeTrade = async (side) => {
     if (!targetPrice || isNaN(parseFloat(targetPrice)))
-      return alert("Enter Enter Amount");
+      return alert("Enter Amount");
     if (scheduleMinutes < 0)
       return alert("Schedule time must be 0 or positive");
     setLoading(true);
     setTimeout(async () => {
       try {
-        // Send selected coin info with trade
-        const res = await api.patch("/auth/balance", {
-          symbol: coin?.symbol || "BTC",
-          targetPrice: parseFloat(targetPrice),
+        // Send trade info to /trade/place
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+        const res = await api.post("/trade/place", {
+          userId: user._id,
           side,
+          price: parseFloat(targetPrice),
+          size: 1, // You can update this if you want to allow user to select size
+          type: "market", // or "limit" if you want
         });
 
-        const nextReal = Number(
-          res.data?.wallet?.realUsdBalance ??
-            res.data?.wallet?.usdBalance ??
-            realBalance,
-        );
-
-        setRealBalance(nextReal);
-        setBalance(nextReal);
-
-        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-        localStorage.setItem(
-          "user",
-          JSON.stringify({ ...storedUser, balance: nextReal }),
-        );
+        // Update balance from response
+        setRealBalance(res.data.remainingBalance);
+        setBalance(res.data.remainingBalance);
 
         setModalData({
           side,
@@ -175,7 +167,7 @@ const TradePanel = ({ inputPrice, setInputPrice, selectedCoin }) => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen min-w-full h-screen w-screen bg-[#15181C] text-white border-l border-[#2B3139] relative">
+    <div className="flex flex-col h-full bg-[#15181C] text-white border-l border-[#2B3139] w-full relative">
       {/* SUCCESS MODAL */}
       {showModal && (
         <div className="fixed lg:absolute inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
@@ -248,14 +240,14 @@ const TradePanel = ({ inputPrice, setInputPrice, selectedCoin }) => {
             <span>Current Price: {inputPrice}</span>
             {modalData?.status && <span>Status: {modalData.status}</span>}
           </div>
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex items-center gap-2 mt-2 " hidden>
             <label className="text-xs text-slate-500 font-black uppercase">
               Schedule (min)
             </label>
             <input
               type="number"
               value={scheduleMinutes}
-              min={0}
+              min={2}
               onChange={(e) => setScheduleMinutes(Number(e.target.value))}
               className="w-20 bg-[#1E2329] p-2 rounded-xl border border-white/5 text-[#FCD535] font-mono font-bold text-xs outline-none shadow-inner"
             />

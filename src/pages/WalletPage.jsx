@@ -1,3 +1,28 @@
+// ...existing code up to the main WalletPage logic...
+
+// (UI rendering logic, including OTP UI for deposit and withdrawal)
+
+// Add OTP UI for deposit
+// In the deposit section, after the amount input, add:
+// <div className="flex gap-2 mt-2">
+//   <button onClick={requestDepositOtp} disabled={depositOtpLoading || depositOtpSent} className="px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:brightness-110 disabled:opacity-60">
+//     {depositOtpLoading ? "Sending OTP..." : depositOtpSent ? "OTP Sent" : "Get OTP"}
+//   </button>
+//   <input type="text" value={depositOtp} onChange={e => setDepositOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} className="px-4 py-2 rounded-lg bg-[#0b0e11] border border-white/10 text-white text-sm w-32" placeholder="Enter OTP" disabled={!depositOtpSent} />
+// </div>
+// {depositOtpMsg && (<p className="mt-2 text-sm text-blue-300">{depositOtpMsg}</p>)}
+
+// Add OTP UI for withdraw
+// In the withdraw section, after the withdraw amount input, add:
+// <div className="flex gap-2 mt-2">
+//   <button onClick={requestWithdrawOtp} disabled={withdrawOtpLoading || withdrawOtpSent} className="px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:brightness-110 disabled:opacity-60">
+//     {withdrawOtpLoading ? "Sending OTP..." : withdrawOtpSent ? "OTP Sent" : "Get OTP"}
+//   </button>
+//   <input type="text" value={withdrawOtp} onChange={e => setWithdrawOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} className="px-4 py-2 rounded-lg bg-[#0b0e11] border border-white/10 text-white text-sm w-32" placeholder="Enter OTP" disabled={!withdrawOtpSent} />
+// </div>
+// {withdrawOtpMsg && (<p className="mt-2 text-sm text-blue-300">{withdrawOtpMsg}</p>)}
+
+// ...rest of WalletPage component and export...
 import React, { useEffect, useState } from "react";
 import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
@@ -19,15 +44,7 @@ const WalletPage = () => {
   const [cardNumber, setCardNumber] = useState("");
   const [expiry, setExpiry] = useState("");
   const [cvv, setCvv] = useState("");
-  const [gateway, setGateway] = useState(
-    import.meta.env.VITE_DEFAULT_PAYMENT_GATEWAY || "stripe",
-  );
-
-  useEffect(() => {
-    if (gateway !== "stripe" && gateway !== "razorpay") {
-      setGateway("stripe");
-    }
-  }, [gateway]);
+  const [gateway, setGateway] = useState("stripe");
 
   /* const fetchWalletData = async () => { ... } */ // Moved to useEffect with auth check
 
@@ -65,7 +82,9 @@ const WalletPage = () => {
           ),
           tokenBalance: Number(res.data.wallet?.tokenBalance || 0),
         });
-        setError(null);
+        setLastUpdated(
+          res.data.wallet?.updatedAt || res.data.wallet?.createdAt || null,
+        );
       }
     } catch (err) {
       console.error("Wallet fetch error:", err);
@@ -86,7 +105,6 @@ const WalletPage = () => {
       .slice(0, 19)
       .replace(/(.{4})/g, "$1 ")
       .trim();
-
   const formatExpiry = (value) => {
     const cleaned = value.replace(/\D/g, "").slice(0, 4);
     if (cleaned.length < 3) return cleaned;
@@ -217,11 +235,10 @@ const WalletPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
               <select
                 value={gateway}
-                onChange={(e) => setGateway(e.target.value)}
-                className="px-4 py-3 rounded-lg bg-[#0b0e11] border border-white/10 text-white text-sm"
+                disabled
+                className="px-4 py-3 rounded-lg bg-[#0b0e11] border border-white/10 text-white text-sm opacity-60 cursor-not-allowed"
               >
                 <option value="stripe">Stripe</option>
-                <option value="razorpay">Razorpay</option>
               </select>
               <div></div>
 
@@ -303,17 +320,46 @@ const WalletPage = () => {
               Assets
             </h3>
 
-            <div className="bg-[#11151c] border border-white/5 rounded-xl p-5 flex justify-between">
-              <div>
-                <p className="text-white font-medium">Real Balance</p>
-                <p className="text-xs text-slate-500">Available</p>
+            <div className="bg-[#11151c] border border-white/5 rounded-xl p-5 flex flex-col gap-2">
+              <div className="flex justify-between">
+                <div>
+                  <p className="text-white font-medium">Real Balance</p>
+                  <p className="text-xs text-slate-500">Available</p>
+                </div>
+                <p className="font-semibold text-white">
+                  $
+                  {wallet.realUsdBalance.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                  })}
+                </p>
               </div>
-              <p className="font-semibold text-white">
-                $
-                {wallet.realUsdBalance.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                })}
-              </p>
+              <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                  className="px-4 py-2 rounded-lg bg-[#0b0e11] border border-white/10 text-white text-sm"
+                  placeholder="Withdraw Amount"
+                  disabled={withdrawLoading}
+                />
+                <button
+                  onClick={handleWithdraw}
+                  disabled={withdrawLoading || !canWithdraw()}
+                  className="px-6 py-2 rounded-lg bg-red-500 text-white text-sm font-semibold hover:brightness-110 disabled:opacity-60"
+                >
+                  {withdrawLoading ? "Processing..." : "Withdraw"}
+                </button>
+              </div>
+              {withdrawMessage && (
+                <p className="mt-2 text-sm text-red-300">{withdrawMessage}</p>
+              )}
+              {!canWithdraw() && (
+                <p className="mt-1 text-xs text-yellow-400">
+                  Withdrawal allowed only after 7 days from last deposit/update.
+                </p>
+              )}
             </div>
 
             <div className="bg-[#11151c] border border-white/5 rounded-xl p-5 flex justify-between">
