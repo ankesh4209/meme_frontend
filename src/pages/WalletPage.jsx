@@ -39,6 +39,7 @@ const WalletPage = () => {
   const [error, setError] = useState(null);
   const [depositAmount, setDepositAmount] = useState();
   const [depositLoading, setDepositLoading] = useState(false);
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
   const [depositMessage, setDepositMessage] = useState("");
   const [cardHolder, setCardHolder] = useState("");
   const [cardNumber, setCardNumber] = useState("");
