@@ -1,3 +1,43 @@
+// Handle Withdraw
+const [withdrawMessage, setWithdrawMessage] = useState("");
+
+const canWithdraw = () => {
+  if (!lastUpdated) return false;
+  const last = new Date(lastUpdated);
+  const now = new Date();
+  const diff = (now - last) / (1000 * 60 * 60 * 24); // days
+  return diff >= 7;
+};
+
+const handleWithdraw = async () => {
+  const amount = Number(withdrawAmount);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    setWithdrawMessage("Enter a valid amount greater than $0.");
+    return;
+  }
+  if (!canWithdraw()) {
+    setWithdrawMessage(
+      "Withdrawal allowed only after 7 days from last deposit/update.",
+    );
+    return;
+  }
+  try {
+    setWithdrawLoading(true);
+    setWithdrawMessage("");
+    const res = await api.post("/auth/withdraw", { amount });
+    if (res.data?.success) {
+      setWithdrawMessage("Withdrawal request submitted. Await admin approval.");
+      setWallet((w) => ({ ...w, realUsdBalance: w.realUsdBalance - amount }));
+      setWithdrawAmount("");
+    } else {
+      setWithdrawMessage(res.data?.message || "Withdrawal failed.");
+    }
+  } catch (err) {
+    setWithdrawMessage(err?.response?.data?.message || "Withdrawal failed.");
+  } finally {
+    setWithdrawLoading(false);
+  }
+};
 // ...existing code up to the main WalletPage logic...
 
 // (UI rendering logic, including OTP UI for deposit and withdrawal)
