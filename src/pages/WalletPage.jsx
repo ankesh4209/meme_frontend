@@ -45,8 +45,10 @@ const WalletPage = () => {
   const [expiry, setExpiry] = useState("");
   const [cvv, setCvv] = useState("");
   const [gateway, setGateway] = useState("stripe");
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
 
-  /* const fetchWalletData = async () => { ... } */ // Moved to useEffect with auth check
+  // ...existing code...
 
   const { user, loading: authLoading, logout } = useAuth();
 
