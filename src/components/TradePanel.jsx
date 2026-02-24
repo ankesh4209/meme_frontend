@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import api from "../api/axios";
 
 const TradePanel = ({ inputPrice, setInputPrice, selectedCoin }) => {
+  const [size, setSize] = useState("");
   // Scheduling
   const [scheduleMinutes, setScheduleMinutes] = useState(0);
   const [countdown, setCountdown] = useState(null);
