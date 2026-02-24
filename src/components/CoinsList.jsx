@@ -140,7 +140,7 @@ const MemeCoinsList = ({ setSelectedCoin }) => {
                   <div
                     key={coin.symbol}
                     onClick={() => {
-                      setSelectedCoin({ symbol: coin.symbol, name: coin.name });
+                      setSelectedCoin(coin);
                       navigate("/dashboard");
                     }}
                     className="grid grid-cols-12 px-4 py-5 items-center hover:bg-[#1e2329] transition-all active:bg-[#1e2329] active:scale-[0.99] cursor-pointer"

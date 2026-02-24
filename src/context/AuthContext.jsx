@@ -78,5 +78,10 @@ export const AuthProvider = ({ children }) => {
     logout,
   };
 
+  if (loading) {
+    return (
+      <div style={{ textAlign: "center", marginTop: "50px" }}>Loading...</div>
+    );
+  }
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
