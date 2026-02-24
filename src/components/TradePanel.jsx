@@ -6,7 +6,7 @@ const TradePanel = ({ inputPrice, setInputPrice, selectedCoin }) => {
   // Scheduling
   const [scheduleMinutes, setScheduleMinutes] = useState(0);
   const [countdown, setCountdown] = useState(null);
-  // Replace size with target price
+  // Replace size with Enter Amount
   const [targetPrice, setTargetPrice] = useState("");
   const [leverage, setLeverage] = useState(20);
   const [balance, setBalance] = useState(0);
@@ -77,8 +77,8 @@ const TradePanel = ({ inputPrice, setInputPrice, selectedCoin }) => {
       const live = parseFloat(inputPrice.toString().replace(/,/g, ""));
       const tgt = parseFloat(targetPrice);
       if (!isNaN(live) && !isNaN(tgt)) {
-        // Buy: current price >= target price
-        // Sell: current price <= target price
+        // Buy: current price >= Enter Amount
+        // Sell: current price <= Enter Amount
         if (modalData?.side === "buy" && live >= tgt) {
           setModalData((prev) => ({ ...prev, status: "Executed" }));
         } else if (modalData?.side === "sell" && live <= tgt) {
@@ -129,7 +129,7 @@ const TradePanel = ({ inputPrice, setInputPrice, selectedCoin }) => {
 
   const placeTrade = async (side) => {
     if (!targetPrice || isNaN(parseFloat(targetPrice)))
-      return alert("Enter Target Price");
+      return alert("Enter Enter Amount");
     if (scheduleMinutes < 0)
       return alert("Schedule time must be 0 or positive");
     setLoading(true);
@@ -175,7 +175,7 @@ const TradePanel = ({ inputPrice, setInputPrice, selectedCoin }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#15181C] text-white border-l border-[#2B3139] w-full relative">
+    <div className="flex flex-col min-h-screen min-w-full h-screen w-screen bg-[#15181C] text-white border-l border-[#2B3139] relative">
       {/* SUCCESS MODAL */}
       {showModal && (
         <div className="fixed lg:absolute inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
@@ -207,12 +207,6 @@ const TradePanel = ({ inputPrice, setInputPrice, selectedCoin }) => {
                 </span>
                 <span className="text-white">${modalData.price}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-bold uppercase">
-                  Margin
-                </span>
-                <span className="text-[#FCD535]">${modalData.margin}</span>
-              </div>
             </div>
             <button
               onClick={() => setShowModal(false)}
@@ -237,7 +231,7 @@ const TradePanel = ({ inputPrice, setInputPrice, selectedCoin }) => {
         <div className="space-y-1">
           <div className="flex justify-between items-center">
             <label className="text-xs sm:text-[10px] text-slate-500 font-black uppercase">
-              Target Price ({coin?.symbol || "BTC"}/USDT)
+              Enter Amount ({coin?.symbol || "BTC"}/USDT)
             </label>
             <span className="text-xs sm:text-[9px] text-[#0ECB81] font-bold tracking-tighter">
               ● LIVE STREAMING
@@ -247,7 +241,7 @@ const TradePanel = ({ inputPrice, setInputPrice, selectedCoin }) => {
             type="number"
             value={targetPrice}
             onChange={(e) => setTargetPrice(e.target.value)}
-            placeholder="Enter your target price"
+            placeholder="Enter your amount"
             className="w-full bg-[#1E2329] p-3 sm:p-3 rounded-xl border border-white/5 text-[#0ECB81] font-mono font-bold text-sm sm:text-base outline-none shadow-inner"
           />
           <div className="flex justify-between mt-1 text-xs">
@@ -286,62 +280,6 @@ const TradePanel = ({ inputPrice, setInputPrice, selectedCoin }) => {
                 min
               </span>
             )}
-          </div>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs sm:text-[10px] text-slate-500 font-black uppercase">
-            Size (BTC)
-          </label>
-          <input
-            type="number"
-            placeholder="0.000"
-            value={size}
-            onChange={(e) => setSize(e.target.value)}
-            className="w-full bg-[#1E2329] p-3 rounded-xl border border-white/5 focus:border-[#FCD535]/50 outline-none transition-all font-mono"
-          />
-        </div>
-
-        {/* Leverage Slider */}
-        <div className="space-y-2 py-2">
-          <div className="flex justify-between text-xs sm:text-[10px] font-bold">
-            <span className="text-slate-500 uppercase">Leverage</span>
-            <span className="text-[#FCD535]">{leverage}x</span>
-          </div>
-          <input
-            type="range"
-            min="1"
-            max="125"
-            value={leverage}
-            onChange={(e) => setLeverage(e.target.value)}
-            className="w-full accent-[#FCD535] h-1.5 sm:h-1.5 bg-[#2B3139] rounded-lg"
-          />
-        </div>
-
-        {/* Percent Buttons */}
-        <div className="grid grid-cols-4 gap-2">
-          {[25, 50, 75, 100].map((p) => (
-            <button
-              key={p}
-              onClick={() => handlePercentage(p)}
-              className="bg-[#2B3139] py-2 sm:py-2 rounded-lg text-xs sm:text-[10px] font-bold hover:bg-[#FCD535] hover:text-black transition-all"
-            >
-              {p}%
-            </button>
-          ))}
-        </div>
-
-        {/* Calculation Info */}
-        <div className="p-3 bg-white/5 rounded-xl border border-white/[0.03] mt-2">
-          <div className="flex justify-between text-[10px]">
-            <span className="text-slate-500 font-bold uppercase">
-              Margin Required
-            </span>
-            <span
-              className={`font-mono font-bold ${isInsufficient ? "text-red-500 animate-pulse" : "text-[#FCD535]"}`}
-            >
-              ${marginRequired}
-            </span>
           </div>
         </div>
       </div>
