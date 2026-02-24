@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import api from "../api/axios";
 
-const TradePanel = ({ inputPrice, setInputPrice }) => {
-    // Scheduling
-    const [scheduleMinutes, setScheduleMinutes] = useState(0);
-    const [countdown, setCountdown] = useState(null);
+const TradePanel = ({ inputPrice, setInputPrice, selectedCoin }) => {
+  // Scheduling
+  const [scheduleMinutes, setScheduleMinutes] = useState(0);
+  const [countdown, setCountdown] = useState(null);
   // Replace size with target price
   const [targetPrice, setTargetPrice] = useState("");
   const [leverage, setLeverage] = useState(20);
@@ -56,18 +56,18 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
   }, [realBalance]);
 
   // Real-time monitoring for auto-execution
-    // Simulate price preview for scheduled orders
-    const [simulatedPrice, setSimulatedPrice] = useState(null);
-    useEffect(() => {
-      if (scheduleMinutes > 0 && targetPrice) {
-        // Simple simulation: assume price increases/decreases by random %
-        const tgt = parseFloat(targetPrice);
-        const randomChange = tgt * (1 + (Math.random() * 0.1 - 0.05)); // +/-5%
-        setSimulatedPrice(randomChange.toFixed(2));
-      } else {
-        setSimulatedPrice(null);
-      }
-    }, [scheduleMinutes, targetPrice]);
+  // Simulate price preview for scheduled orders
+  const [simulatedPrice, setSimulatedPrice] = useState(null);
+  useEffect(() => {
+    if (scheduleMinutes > 0 && targetPrice) {
+      // Simple simulation: assume price increases/decreases by random %
+      const tgt = parseFloat(targetPrice);
+      const randomChange = tgt * (1 + (Math.random() * 0.1 - 0.05)); // +/-5%
+      setSimulatedPrice(randomChange.toFixed(2));
+    } else {
+      setSimulatedPrice(null);
+    }
+  }, [scheduleMinutes, targetPrice]);
   useEffect(() => {
     if (!targetPrice || !coin) return;
     let interval;
@@ -93,7 +93,10 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
       timer = setInterval(() => {
         setCountdown((prev) => {
           if (prev === 1) {
-            setModalData((prevData) => ({ ...prevData, status: "Executed (Scheduled)" }));
+            setModalData((prevData) => ({
+              ...prevData,
+              status: "Executed (Scheduled)",
+            }));
             clearInterval(timer);
             return null;
           }
@@ -124,8 +127,10 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
   };
 
   const placeTrade = async (side) => {
-    if (!targetPrice || isNaN(parseFloat(targetPrice))) return alert("Enter Target Price");
-    if (scheduleMinutes < 0) return alert("Schedule time must be 0 or positive");
+    if (!targetPrice || isNaN(parseFloat(targetPrice)))
+      return alert("Enter Target Price");
+    if (scheduleMinutes < 0)
+      return alert("Schedule time must be 0 or positive");
     setLoading(true);
     setTimeout(async () => {
       try {
@@ -240,7 +245,7 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
           <input
             type="number"
             value={targetPrice}
-            onChange={e => setTargetPrice(e.target.value)}
+            onChange={(e) => setTargetPrice(e.target.value)}
             placeholder="Enter your target price"
             className="w-full bg-[#1E2329] p-3 sm:p-3 rounded-xl border border-white/5 text-[#0ECB81] font-mono font-bold text-sm sm:text-base outline-none shadow-inner"
           />
@@ -249,27 +254,36 @@ const TradePanel = ({ inputPrice, setInputPrice }) => {
             {modalData?.status && <span>Status: {modalData.status}</span>}
           </div>
           <div className="flex items-center gap-2 mt-2">
-            <label className="text-xs text-slate-500 font-black uppercase">Schedule (min)</label>
+            <label className="text-xs text-slate-500 font-black uppercase">
+              Schedule (min)
+            </label>
             <input
               type="number"
               value={scheduleMinutes}
               min={0}
-              onChange={e => setScheduleMinutes(Number(e.target.value))}
+              onChange={(e) => setScheduleMinutes(Number(e.target.value))}
               className="w-20 bg-[#1E2329] p-2 rounded-xl border border-white/5 text-[#FCD535] font-mono font-bold text-xs outline-none shadow-inner"
             />
             {countdown !== null && (
               <>
-                <span className="text-xs text-[#FCD535]">Countdown: {countdown}s</span>
+                <span className="text-xs text-[#FCD535]">
+                  Countdown: {countdown}s
+                </span>
                 <div className="w-32 h-2 bg-[#23262b] rounded overflow-hidden ml-2">
                   <div
                     className="h-2 bg-[#FCD535] transition-all"
-                    style={{ width: `${((countdown / (scheduleMinutes * 60)) * 100) || 0}%` }}
+                    style={{
+                      width: `${(countdown / (scheduleMinutes * 60)) * 100 || 0}%`,
+                    }}
                   />
                 </div>
               </>
             )}
             {simulatedPrice && (
-              <span className="text-xs text-[#0ECB81] ml-2">Preview: {targetPrice} → {simulatedPrice} in {scheduleMinutes} min</span>
+              <span className="text-xs text-[#0ECB81] ml-2">
+                Preview: {targetPrice} → {simulatedPrice} in {scheduleMinutes}{" "}
+                min
+              </span>
             )}
           </div>
         </div>
