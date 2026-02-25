@@ -17,7 +17,9 @@ const ChartHeader = ({ currentPrice, selectedCoin }) => {
         </h1>
 
         <span className="text-base sm:text-xl font-mono font-bold text-[#0ECB81]">
-          {currentPrice.toFixed(2)}
+          {currentPrice != null && !isNaN(currentPrice)
+            ? currentPrice.toFixed(2)
+            : "--"}
         </span>
       </div>
 
