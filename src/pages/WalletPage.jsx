@@ -1,68 +1,3 @@
-// Handle Withdraw
-const [withdrawMessage, setWithdrawMessage] = useState("");
-
-const canWithdraw = () => {
-  if (!lastUpdated) return false;
-  const last = new Date(lastUpdated);
-  const now = new Date();
-  const diff = (now - last) / (1000 * 60 * 60 * 24); // days
-  return diff >= 7;
-};
-
-const handleWithdraw = async () => {
-  const amount = Number(withdrawAmount);
-  if (!Number.isFinite(amount) || amount <= 0) {
-    setWithdrawMessage("Enter a valid amount greater than $0.");
-    return;
-  }
-  if (!canWithdraw()) {
-    setWithdrawMessage(
-      "Withdrawal allowed only after 7 days from last deposit/update.",
-    );
-    return;
-  }
-  try {
-    setWithdrawLoading(true);
-    setWithdrawMessage("");
-    const res = await api.post("/auth/withdraw", { amount });
-    if (res.data?.success) {
-      setWithdrawMessage("Withdrawal request submitted. Await admin approval.");
-      setWallet((w) => ({ ...w, realUsdBalance: w.realUsdBalance - amount }));
-      setWithdrawAmount("");
-    } else {
-      setWithdrawMessage(res.data?.message || "Withdrawal failed.");
-    }
-  } catch (err) {
-    setWithdrawMessage(err?.response?.data?.message || "Withdrawal failed.");
-  } finally {
-    setWithdrawLoading(false);
-  }
-};
-// ...existing code up to the main WalletPage logic...
-
-// (UI rendering logic, including OTP UI for deposit and withdrawal)
-
-// Add OTP UI for deposit
-// In the deposit section, after the amount input, add:
-// <div className="flex gap-2 mt-2">
-//   <button onClick={requestDepositOtp} disabled={depositOtpLoading || depositOtpSent} className="px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:brightness-110 disabled:opacity-60">
-//     {depositOtpLoading ? "Sending OTP..." : depositOtpSent ? "OTP Sent" : "Get OTP"}
-//   </button>
-//   <input type="text" value={depositOtp} onChange={e => setDepositOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} className="px-4 py-2 rounded-lg bg-[#0b0e11] border border-white/10 text-white text-sm w-32" placeholder="Enter OTP" disabled={!depositOtpSent} />
-// </div>
-// {depositOtpMsg && (<p className="mt-2 text-sm text-blue-300">{depositOtpMsg}</p>)}
-
-// Add OTP UI for withdraw
-// In the withdraw section, after the withdraw amount input, add:
-// <div className="flex gap-2 mt-2">
-//   <button onClick={requestWithdrawOtp} disabled={withdrawOtpLoading || withdrawOtpSent} className="px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:brightness-110 disabled:opacity-60">
-//     {withdrawOtpLoading ? "Sending OTP..." : withdrawOtpSent ? "OTP Sent" : "Get OTP"}
-//   </button>
-//   <input type="text" value={withdrawOtp} onChange={e => setWithdrawOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} className="px-4 py-2 rounded-lg bg-[#0b0e11] border border-white/10 text-white text-sm w-32" placeholder="Enter OTP" disabled={!withdrawOtpSent} />
-// </div>
-// {withdrawOtpMsg && (<p className="mt-2 text-sm text-blue-300">{withdrawOtpMsg}</p>)}
-
-// ...rest of WalletPage component and export...
 import React, { useEffect, useState } from "react";
 import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
@@ -88,8 +23,47 @@ const WalletPage = () => {
   const [gateway, setGateway] = useState("stripe");
   const [lastUpdated, setLastUpdated] = useState(null);
   const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [withdrawMessage, setWithdrawMessage] = useState("");
 
-  // ...existing code...
+  const canWithdraw = () => {
+    if (!lastUpdated) return false;
+    const last = new Date(lastUpdated);
+    const now = new Date();
+    const diff = (now - last) / (1000 * 60 * 60 * 24); // days
+    return diff >= 7;
+  };
+
+  const handleWithdraw = async () => {
+    const amount = Number(withdrawAmount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setWithdrawMessage("Enter a valid amount greater than $0.");
+      return;
+    }
+    if (!canWithdraw()) {
+      setWithdrawMessage(
+        "Withdrawal allowed only after 7 days from last deposit/update.",
+      );
+      return;
+    }
+    try {
+      setWithdrawLoading(true);
+      setWithdrawMessage("");
+      const res = await api.post("/auth/withdraw", { amount });
+      if (res.data?.success) {
+        setWithdrawMessage(
+          "Withdrawal request submitted. Await admin approval.",
+        );
+        setWallet((w) => ({ ...w, realUsdBalance: w.realUsdBalance - amount }));
+        setWithdrawAmount("");
+      } else {
+        setWithdrawMessage(res.data?.message || "Withdrawal failed.");
+      }
+    } catch (err) {
+      setWithdrawMessage(err?.response?.data?.message || "Withdrawal failed.");
+    } finally {
+      setWithdrawLoading(false);
+    }
+  };
 
   const { user, loading: authLoading, logout } = useAuth();
 
