@@ -40,7 +40,7 @@ const Register = () => {
       }
       await register(username, email, password);
       setLoading(false);
-      navigate("/coin");
+      navigate("/");
     } catch (err) {
       console.error("Registration error:", err);
       setError(err.message || "Registration failed. Please try again.");
@@ -129,12 +129,13 @@ const Register = () => {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Already have an account?{" "}
-              <a
-                href="/"
-                className="font-medium text-indigo-600 hover:text-indigo-500"
+              <button
+                type="button"
+                onClick={() => navigate("/")}
+                className="font-medium text-indigo-600 hover:text-indigo-500 bg-transparent border-none cursor-pointer"
               >
                 Log in
-              </a>
+              </button>
             </p>
           </div>
         </div>
