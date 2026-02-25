@@ -69,7 +69,9 @@ const Orderbook = ({ currentPrice }) => {
           {/* Current Price Highlight (Center) */}
           <div className="py-2 px-3 flex items-center justify-between border-y border-[#262930] bg-[#0B0E11]/80 backdrop-blur-sm">
             <span className="text-sm sm:text-base font-bold text-[#0ECB81]">
-              {currentPrice.toFixed(2)}
+              {currentPrice != null && !isNaN(currentPrice)
+                ? currentPrice.toFixed(2)
+                : "--"}
             </span>
             <span className="text-[10px] text-slate-500">Last Price</span>
           </div>
