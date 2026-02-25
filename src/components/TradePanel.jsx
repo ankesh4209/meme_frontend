@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import api from "../api/axios";
+import { useNavigate } from "react-router-dom";
 
 const TradePanel = ({ inputPrice, setInputPrice, selectedCoin }) => {
+  const navigate = useNavigate();
   const [size, setSize] = useState("");
   // Scheduling
   const [scheduleMinutes, setScheduleMinutes] = useState(0);
@@ -126,10 +128,27 @@ const TradePanel = ({ inputPrice, setInputPrice, selectedCoin }) => {
   };
 
   const placeTrade = async (side) => {
-    if (!targetPrice || isNaN(parseFloat(targetPrice)))
-      return alert("Enter Amount");
-    if (scheduleMinutes < 0)
-      return alert("Schedule time must be 0 or positive");
+    if (!targetPrice || isNaN(parseFloat(targetPrice))) {
+      alert("Enter a valid amount in USD");
+      return;
+    }
+    const amount = parseFloat(targetPrice);
+    if (amount <= 0) {
+      alert(
+        "Amount must be greater than zero. Please add funds to your wallet.",
+      );
+      navigate("/wallet");
+      return;
+    }
+    if (amount > realBalance) {
+      alert("Insufficient balance. Please add funds to your wallet.");
+      navigate("/wallet");
+      return;
+    }
+    if (scheduleMinutes < 0) {
+      alert("Schedule time must be 0 or positive");
+      return;
+    }
     setLoading(true);
     setTimeout(async () => {
       try {
@@ -138,7 +157,7 @@ const TradePanel = ({ inputPrice, setInputPrice, selectedCoin }) => {
         const res = await api.post("/trade/place", {
           userId: user._id,
           side,
-          price: parseFloat(targetPrice),
+          price: amount,
           size: 1, // You can update this if you want to allow user to select size
           type: "market", // or "limit" if you want
         });
@@ -149,7 +168,7 @@ const TradePanel = ({ inputPrice, setInputPrice, selectedCoin }) => {
 
         setModalData({
           side,
-          price: targetPrice,
+          price: amount,
           symbol: coin?.symbol || "BTC",
           status: "Pending",
           scheduleMinutes,
