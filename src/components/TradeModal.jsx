@@ -1,6 +1,12 @@
 import React from "react";
 
-const TradeModal = ({ isOpen, onClose, orderType, inputPrice }) => {
+const TradeModal = ({
+  isOpen,
+  onClose,
+  orderType,
+  inputPrice,
+  selectedCoin,
+}) => {
   if (!isOpen) return null;
 
   const isBuy = orderType === "buy";
@@ -60,7 +66,9 @@ const TradeModal = ({ isOpen, onClose, orderType, inputPrice }) => {
         <div className="space-y-4 mb-8 font-mono text-sm">
           <div className="flex justify-between items-center">
             <span className="text-slate-400">Contract</span>
-            <span className="font-bold text-white">BTCUSDT PERP</span>
+            <span className="font-bold text-white">
+              {(selectedCoin?.symbol || "BTC").toUpperCase()}USDT PERP
+            </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-slate-400">Price</span>
@@ -68,7 +76,9 @@ const TradeModal = ({ isOpen, onClose, orderType, inputPrice }) => {
           </div>
           <div className="flex justify-between items-center">
             <span className="text-slate-400">Amount</span>
-            <span className="text-white">0.500 BTC</span>
+            <span className="text-white">
+              0.500 {(selectedCoin?.symbol || "BTC").toUpperCase()}
+            </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-slate-400">Leverage</span>

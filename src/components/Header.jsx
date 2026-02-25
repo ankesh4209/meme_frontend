@@ -27,22 +27,26 @@ const Header = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState(null);
 
-  const WS_URL = "wss://stream.binance.com:9443/ws/btcusdt@trade";
-  const [btcPrice, setBtcPrice] = useState("0.00");
-
+  // Show selected coin price in header
+  const [coinPrice, setCoinPrice] = useState("0.00");
+  const selectedCoin = JSON.parse(
+    localStorage.getItem("selectedCoin") || '{"symbol":"BTC"}',
+  );
   useEffect(() => {
-    const btcWs = new WebSocket(WS_URL);
-    btcWs.onmessage = (event) => {
+    const wsSymbol = `${selectedCoin.symbol?.toLowerCase() || "btc"}usdt@trade`;
+    const wsUrl = `wss://stream.binance.com:9443/ws/${wsSymbol}`;
+    const ws = new WebSocket(wsUrl);
+    ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      setBtcPrice(
+      setCoinPrice(
         parseFloat(data.p).toLocaleString(undefined, {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         }),
       );
     };
-    return () => btcWs.close();
-  }, []);
+    return () => ws.close();
+  }, [selectedCoin.symbol]);
 
   useEffect(() => {
     const standaloneMode =
@@ -205,7 +209,9 @@ const Header = () => {
           </span>
         </Link>
         <div className="flex items-center gap-1.5 px-2 py-1 bg-[#1E2228] rounded border border-white/5 font-mono text-[10px] sm:text-xs">
-          <span className="text-[#0ECB81] font-bold">${btcPrice}</span>
+          <span className="text-[#0ECB81] font-bold">
+            {selectedCoin.symbol?.toUpperCase() || "BTC"}/USDT: ${coinPrice}
+          </span>
         </div>
       </div>
 

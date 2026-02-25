@@ -15,10 +15,8 @@ const TradePanel = ({ inputPrice, setInputPrice, selectedCoin }) => {
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState(null);
   // Accept selectedCoin prop
-  const [coin, setCoin] = useState(null);
-  useEffect(() => {
-    if (selectedCoin) setCoin(selectedCoin);
-  }, [selectedCoin]);
+  // Remove local coin state, use selectedCoin directly
+  const coin = selectedCoin;
 
   // --- REAL PRICE AUTO-UPDATE LOGIC ---
   // Whenever inputPrice (BTC live) changes via props, keep this field in sync

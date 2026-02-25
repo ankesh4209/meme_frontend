@@ -23,10 +23,18 @@ const App = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [orderType, setOrderType] = useState("buy");
   const [activeSection, setActiveSection] = useState("chart");
-  const [selectedCoin, setSelectedCoin] = useState({
-    symbol: "BTC",
-    name: "Bitcoin",
+  // Coin selection: persist in localStorage
+  const [selectedCoin, setSelectedCoin] = useState(() => {
+    const saved = localStorage.getItem("selectedCoin");
+    return saved ? JSON.parse(saved) : { symbol: "BTC", name: "Bitcoin" };
   });
+
+  // Whenever selectedCoin changes, save to localStorage
+  useEffect(() => {
+    if (selectedCoin) {
+      localStorage.setItem("selectedCoin", JSON.stringify(selectedCoin));
+    }
+  }, [selectedCoin]);
 
   useEffect(() => {
     let socket;
@@ -196,6 +204,7 @@ const App = () => {
             onClose={() => setIsModalOpen(false)}
             orderType={orderType}
             inputPrice={inputPrice}
+            selectedCoin={selectedCoin}
           />
 
           <Routes>
