@@ -334,6 +334,15 @@ const Header = () => {
                   My Assets
                 </button>
                 <button
+                  onClick={() => {
+                    navigate("/faq");
+                    setIsProfileOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2.5 text-[11px] text-yellow-400 hover:bg-[#262930] rounded"
+                >
+                  FAQ & Terms
+                </button>
+                <button
                   onClick={logout}
                   className="w-full text-left px-4 py-2.5 text-[11px] text-red-400 hover:bg-red-900/10 rounded"
                 >

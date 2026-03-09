@@ -1,3 +1,4 @@
+const FaqPage = lazy(() => import("./pages/FaqPage"));
 import React, { Suspense, lazy, useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext.jsx";
@@ -231,6 +232,7 @@ const App = () => {
               path="/coin"
               element={<CoinsList setSelectedCoin={setSelectedCoin} />}
             />
+            <Route path="/faq" element={<FaqPage />} />
           </Routes>
         </Suspense>
       </AuthProvider>

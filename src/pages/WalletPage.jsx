@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import ManualQRCode from "../components/ManualQRCode";
 import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -437,6 +438,11 @@ const WalletPage = () => {
               </tbody>
             </table>
           </div>
+        </section>
+
+        {/* MANUAL QR CODE */}
+        <section>
+          <ManualQRCode />
         </section>
       </main>
 
