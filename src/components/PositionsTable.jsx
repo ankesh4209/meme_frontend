@@ -11,6 +11,9 @@ const PositionsTable = ({ selectedCoin, setSelectedCoin, userId }) => {
         const res = await axios.get(`/trade/positions?userId=${userId}`);
         setPositions(res.data.positions || []);
       } catch (err) {
+        console.error("FULL ERROR:", err);
+  console.error("RESPONSE:", err.response);
+  console.error("DATA:", err.response?.data);
         setPositions([]);
       }
     };

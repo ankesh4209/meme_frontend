@@ -1,5 +1,5 @@
-const FaqPage = lazy(() => import("./pages/FaqPage"));
 import React, { Suspense, lazy, useState, useEffect } from "react";
+const FaqPage = lazy(() => import("./pages/FaqPage"));
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext.jsx";
 
