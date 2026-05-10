@@ -24,6 +24,7 @@ const App = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [orderType, setOrderType] = useState("buy");
   const [activeSection, setActiveSection] = useState("chart");
+  const [tickerData, setTickerData] = useState({});
   // Coin selection: persist in localStorage
   const [selectedCoin, setSelectedCoin] = useState(() => {
     const saved = localStorage.getItem("selectedCoin");
@@ -37,53 +38,65 @@ const App = () => {
     }
   }, [selectedCoin]);
 
-  useEffect(() => {
-    let socket;
-    let reconnectTimeout;
-    let isUnmounted = false;
+ useEffect(() => {
+  let socket;
+  let reconnectTimeout;
+  let isUnmounted = false;
 
-    const wsSymbol = `${selectedCoin.symbol.toLowerCase()}usdt@trade`;
-    const wsUrl = `wss://stream.binance.com:9443/ws/${wsSymbol}`;
+  const symbol = selectedCoin.symbol.toLowerCase() + "usdt";
 
-    const connect = () => {
-      socket = new WebSocket(wsUrl);
+  const connect = () => {
+    socket = new WebSocket(
+      `wss://stream.binance.com:9443/ws/${symbol}@ticker`
+    );
 
-      socket.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          const livePrice = Number.parseFloat(data.p);
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
 
-          if (!Number.isNaN(livePrice)) {
-            setCurrentPrice(livePrice);
-            setInputPrice(
-              livePrice.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }),
-            );
-          }
-        } catch (error) {
-          console.error("Price socket parse error:", error);
+        const livePrice = Number(data.c); // current price
+
+        if (!Number.isNaN(livePrice)) {
+          setCurrentPrice(livePrice);
+
+          setInputPrice(
+            livePrice.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })
+          );
         }
-      };
 
-      socket.onclose = () => {
-        if (!isUnmounted) {
-          reconnectTimeout = setTimeout(connect, 2000);
-        }
-      };
-    };
+        // ✅ REAL 24h DATA
+        setTickerData({
+          change24h: Number(data.P), // %
+          high24h: Number(data.h),
+          low24h: Number(data.l),
+          volume: Number(data.v),
+        });
 
-    connect();
-
-    return () => {
-      isUnmounted = true;
-      clearTimeout(reconnectTimeout);
-      if (socket && socket.readyState <= 1) {
-        socket.close();
+      } catch (error) {
+        console.error("Ticker socket error:", error);
       }
     };
-  }, [selectedCoin]);
+
+    socket.onclose = () => {
+      if (!isUnmounted) {
+        reconnectTimeout = setTimeout(connect, 2000);
+      }
+    };
+  };
+
+  connect();
+
+  return () => {
+    isUnmounted = true;
+    clearTimeout(reconnectTimeout);
+    if (socket && socket.readyState <= 1) {
+      socket.close();
+    }
+  };
+}, [selectedCoin]);
 
   const handleOpenModal = (type) => {
     setOrderType(type);
@@ -149,6 +162,7 @@ const App = () => {
               <ChartHeader
                 currentPrice={currentPrice}
                 selectedCoin={selectedCoin}
+                ticker={tickerData}
               />
             )}
             <TradingViewChart selectedCoin={selectedCoin} />
@@ -160,7 +174,7 @@ const App = () => {
           </div>
         )}
 
-        <aside className="w-72 bg-[#15181C] border-l border-[#262930] flex flex-col shrink-0 max-[1280px]:w-full overflow-y-auto">
+       <aside className="w-full xl:w-[360px] bg-[#15181C] border-l border-[#262930] flex flex-col shrink-0 overflow-hidden">
           {(activeSection === "chart" || activeSection === "order") && (
             <Orderbook currentPrice={currentPrice} />
           )}
@@ -218,7 +232,7 @@ const App = () => {
               path="/dashboard"
               element={
                 <div className="antialiased flex flex-col min-h-dvh md:h-screen">
-                  <Header />
+               <Header selectedCoin={selectedCoin} />
                   <div className="flex-1 flex overflow-auto max-[1280px]:flex-col pb-24 md:pb-0">
                     {renderDashboardLayout()}
                   </div>
