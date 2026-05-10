@@ -282,7 +282,7 @@ const WalletPage = () => {
                 <div className="flex justify-between text-sm gap-3">
                   <span className="text-slate-500">UPI ID</span>
                   <span className="text-white font-medium text-right">
-                    yourupi@bank
+                    8175847774@okbizaxis
                   </span>
                 </div>
 
